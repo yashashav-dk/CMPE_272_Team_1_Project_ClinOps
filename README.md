@@ -1,4 +1,4 @@
-# Agentic Clinical Trial Project Manager
+# ClinOps - Agentic Clinical Trial Project Manager
 
 
 
