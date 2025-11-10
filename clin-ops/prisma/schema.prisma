@@ -1,3 +1,6 @@
+// Prisma schema for PostgreSQL on Render
+// Maps existing SQLite tables to Postgres via Prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,11 +10,101 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  name         String?
-  passwordHash String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model Project {
+  id          String         @id
+  name        String
+  description String?
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  chatHistories ChatHistory[]
+
+  @@map("projects")
+}
+
+model ChatHistory {
+  id           String   @id
+  projectId    String   @map("project_id")
+  userId       String   @map("user_id")
+  persona      String?
+  currentTab   String?  @map("current_tab")
+  projectInfo  Json?    @map("project_info")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  messages     Message[]
+  tabContents  TabContent[]
+  tabGenerations TabContentGeneration[]
+
+  @@index([projectId], map: "idx_chat_history_project_id")
+  @@map("chat_history")
+}
+
+model Message {
+  id        String   @id
+  chatId    String   @map("chat_id")
+  text      String
+  sender    String
+  persona   String?
+  timestamp DateTime @default(now())
+
+  chat ChatHistory @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId], map: "idx_messages_chat_id")
+  @@map("messages")
+}
+
+model TabContent {
+  id          String   @id
+  chatId      String   @map("chat_id")
+  tabType     String   @map("tab_type")
+  content     String
+  generatedAt DateTime @default(now()) @map("generated_at")
+
+  chat ChatHistory @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId], map: "idx_tab_content_chat_id")
+  @@map("tab_content")
+}
+
+model TabContentGeneration {
+  id        String   @id
+  chatId    String   @map("chat_id")
+  tabType   String   @map("tab_type")
+  status    String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  chat ChatHistory @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@map("tab_content_generation")
+}
+
+model AiResponse {
+  id         String   @id
+  projectId  String   @map("project_id")
+  tabType    String   @map("tab_type")
+  promptHash String   @map("prompt_hash")
+  prompt     String
+  response   String
+  userId     String   @map("user_id")
+  persona    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([projectId, tabType, promptHash], map: "idx_ai_responses_project_tab_hash")
+  @@map("ai_responses")
+}
+
+model AiResponseCache {
+  promptHash String   @id @map("prompt_hash")
+  prompt     String
+  response   String
+  userId     String   @map("user_id")
+  projectId  String?  @map("project_id")
+  persona    String?
+  tabType    String?  @map("tab_type")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("ai_response_cache")
 }
