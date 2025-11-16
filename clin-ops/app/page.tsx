@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import ContextAwareChat from './ContextAwareChat'
+import { useRouter } from 'next/navigation'
 
 type User = { id: string; email: string; name?: string; createdAt: string }
 
@@ -83,6 +83,7 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<'login' | 'register'>('login')
+  const router = useRouter()
 
   useEffect(() => {
     let ignore = false
@@ -90,7 +91,18 @@ export default function Home() {
       const res = await fetch('/api/auth/me', { credentials: 'include' })
       if (res.ok) {
         const u = await res.json()
-        if (!ignore) setUser(u)
+        if (!ignore) {
+          setUser(u)
+          // Redirect to first project if user is logged in
+          const projectsRes = await fetch('/api/projects', { credentials: 'include' })
+          if (projectsRes.ok) {
+            const result = await projectsRes.json()
+            if (result.success && result.data.length > 0) {
+              router.push(`/${result.data[0].id}`)
+              return
+            }
+          }
+        }
       } else {
         if (!ignore) setUser(null)
       }
@@ -99,7 +111,7 @@ export default function Home() {
     return () => {
       ignore = true
     }
-  }, [])
+  }, [router])
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
@@ -148,11 +160,36 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Hello {user.name || user.email}</h2>
-              <div className="h-[70vh] w-full border rounded">
-                <ContextAwareChat />
+            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
+              <div className="text-center space-y-4">
+                <h2 className="text-3xl font-semibold">Welcome to ClinOps</h2>
+                <p className="text-gray-600 max-w-md">
+                  You don't have any projects yet. Create your first clinical trial project to get started.
+                </p>
               </div>
+              <button
+                onClick={async () => {
+                  const name = prompt('Enter project name:')
+                  if (!name?.trim()) return
+
+                  const res = await fetch('/api/projects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ name: name.trim() })
+                  })
+
+                  if (res.ok) {
+                    const result = await res.json()
+                    if (result.success) {
+                      router.push(`/${result.data.id}`)
+                    }
+                  }
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium"
+              >
+                Create Your First Project
+              </button>
             </div>
           )}
         </div>

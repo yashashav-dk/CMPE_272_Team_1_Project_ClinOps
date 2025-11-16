@@ -12,6 +12,7 @@ datasource db {
 
 model Project {
   id          String         @id
+  userId      String         @map("user_id")
   name        String
   description String?
   createdAt   DateTime       @default(now()) @map("created_at")
@@ -19,6 +20,7 @@ model Project {
 
   chatHistories ChatHistory[]
 
+  @@index([userId])
   @@map("projects")
 }
 
