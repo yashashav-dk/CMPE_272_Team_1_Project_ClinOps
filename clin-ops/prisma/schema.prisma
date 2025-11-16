@@ -108,3 +108,38 @@ model AiResponseCache {
 
   @@map("ai_response_cache")
 }
+
+model SavedDiagram {
+  id          String   @id @default(uuid())
+  projectId   String   @map("project_id")
+  userId      String   @map("user_id")
+  title       String
+  description String?
+  diagramCode String   @map("diagram_code")
+  diagramType String?  @map("diagram_type")
+  context     Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([projectId], map: "idx_saved_diagrams_project_id")
+  @@index([userId], map: "idx_saved_diagrams_user_id")
+  @@map("saved_diagrams")
+}
+
+model DashboardWidget {
+  id          String   @id @default(uuid())
+  projectId   String   @map("project_id")
+  userId      String   @map("user_id")
+  tabType     String   @map("tab_type")
+  widgetType  String   @map("widget_type")
+  title       String
+  content     Json
+  rawContent  String   @map("raw_content")
+  order       Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([projectId], map: "idx_dashboard_widgets_project_id")
+  @@index([userId], map: "idx_dashboard_widgets_user_id")
+  @@map("dashboard_widgets")
+}

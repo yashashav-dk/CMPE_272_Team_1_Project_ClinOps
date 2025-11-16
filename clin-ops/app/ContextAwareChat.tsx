@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { HiPaperAirplane } from 'react-icons/hi2'
-import { HiCheckCircle, HiQuestionMarkCircle, HiRefresh, HiOutlineTrash } from 'react-icons/hi'
+import { HiCheckCircle, HiQuestionMarkCircle, HiRefresh, HiOutlineTrash, HiViewGrid } from 'react-icons/hi'
 import ReactMarkdown from 'react-markdown'
 import MermaidDiagram from './MermaidDiagram'
 import './style.css'
@@ -30,7 +30,7 @@ type ProjectQuestion = {
 }
 
 // Enhanced markdown renderer component using react-markdown with Mermaid support
-const SimpleMarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
+const SimpleMarkdownRenderer: React.FC<{ content: string; projectId?: string; contextInfo?: string }> = ({ content, projectId, contextInfo }) => {
   if (!content || typeof content !== 'string') {
     return <p className="text-xs text-gray-500">No content available</p>;
   }
@@ -130,7 +130,7 @@ const SimpleMarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
         if (part.type === 'mermaid') {
           return (
             <div key={index} className="my-4">
-              <MermaidDiagram chart={part.content} />
+              <MermaidDiagram chart={part.content} projectId={projectId} contextInfo={contextInfo} />
             </div>
           );
         } else {
@@ -254,6 +254,8 @@ export default function ContextAwareChat() {
   const [isTabContentLoading, setIsTabContentLoading] = useState(false)
   const [tabContentGeneration, setTabContentGeneration] = useState<Record<string, 'pending' | 'generating' | 'complete' | 'error'>>({})
   const [isDataLoaded, setIsDataLoaded] = useState(false)
+  const [tabsSentToDashboard, setTabsSentToDashboard] = useState<Set<string>>(new Set())
+  const [isSendingToDashboard, setIsSendingToDashboard] = useState(false)
   
   // Change request state
   const [changeRequest, setChangeRequest] = useState('')
@@ -1104,39 +1106,39 @@ Please provide the updated content that addresses the change request while maint
   const handleRefreshTabContent = async () => {
     // Skip for the general tab since it has its own content
     if (currentTab === 'general') return;
-    
+
     // Create tab key
     const tabKey = `${currentPersona}-${currentTab}`;
-    
+
     // Start generating content
     setIsTabContentLoading(true);
     setTabContentGeneration(prev => ({
       ...prev,
       [tabKey]: 'generating'
     }));
-    
+
     try {
       // Get project information and generate new content with forceRefresh=true
       const projectInfo = getProjectInfo();
       const content = await generateComprehensiveTabContent(
-        currentPersona, 
-        currentTab, 
-        projectInfo, 
-        projectId as string, 
+        currentPersona,
+        currentTab,
+        projectInfo,
+        projectId as string,
         true // forceRefresh = true for refresh button
       );
-      
+
       // Update content and status
       setTabContent(prev => ({
         ...prev,
         [tabKey]: content
       }));
-      
+
       setTabContentGeneration(prev => ({
         ...prev,
         [tabKey]: 'complete'
       }));
-      
+
       // Immediately save the refreshed content
       const refreshProjectInfo = getProjectInfo();
       saveChatData(
@@ -1153,7 +1155,7 @@ Please provide the updated content that addresses the change request while maint
       });
     } catch (error) {
       console.error('Error refreshing tab content:', error);
-      
+
       // Set error status
       setTabContentGeneration(prev => ({
         ...prev,
@@ -1161,6 +1163,101 @@ Please provide the updated content that addresses the change request while maint
       }));
     } finally {
       setIsTabContentLoading(false);
+    }
+  };
+
+  // Handle sending tab content to dashboard (with optional structured mode)
+  const handleSendToDashboard = async (useStructured: boolean = false) => {
+    // Skip for the general tab
+    if (currentTab === 'general') return;
+
+    const tabKey = `${currentPersona}-${currentTab}`;
+    const content = tabContent[tabKey];
+
+    if (!content) {
+      alert('No content available to send to dashboard');
+      return;
+    }
+
+    setIsSendingToDashboard(true);
+
+    try {
+      const response = await fetch('/api/dashboard/add-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectId: projectId || 'default-project',
+          userId: 'default-user',
+          tabType: currentTab,
+          persona: currentPersona,
+          content,
+          useStructured
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Mark this tab as sent to dashboard
+        setTabsSentToDashboard(prev => new Set(prev).add(tabKey));
+
+        // Show success message
+        alert(`Successfully sent ${result.data.widgetsCreated} widget(s) to dashboard! (${result.data.mode} mode)`);
+      } else {
+        alert(`Failed to send to dashboard: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error sending to dashboard:', error);
+      alert('Failed to send content to dashboard');
+    } finally {
+      setIsSendingToDashboard(false);
+    }
+  };
+
+  // Handle generating structured content directly (NEW - better approach)
+  const handleGenerateStructured = async () => {
+    // Skip for the general tab
+    if (currentTab === 'general') return;
+
+    const tabKey = `${currentPersona}-${currentTab}`;
+
+    setIsSendingToDashboard(true);
+
+    try {
+      const projectInfo = getProjectInfo();
+
+      const response = await fetch('/api/dashboard/generate-structured', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectId: projectId || 'default-project',
+          userId: 'default-user',
+          tabType: currentTab,
+          persona: currentPersona,
+          projectInfo
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Mark this tab as sent to dashboard
+        setTabsSentToDashboard(prev => new Set(prev).add(tabKey));
+
+        // Show success message
+        alert(`Successfully generated ${result.data.widgetsCreated} structured widget(s)!`);
+      } else {
+        alert(`Failed to generate structured content: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error generating structured content:', error);
+      alert('Failed to generate structured content');
+    } finally {
+      setIsSendingToDashboard(false);
     }
   };
 
@@ -1292,18 +1389,67 @@ Please provide the updated content that addresses the change request while maint
       <div className="p-3 h-full overflow-auto">
         <h3 className="text-sm font-semibold mb-3 flex items-center justify-between">
           <span>{getTabDisplayName(currentPersona, currentTab)}</span>
-          
-          {/* Refresh button */}
-          {generationStatus === 'complete' && (
-            <button 
-              onClick={handleRefreshTabContent}
-              className="text-xs flex items-center gap-1 text-indigo-500 hover:text-indigo-700"
-              disabled={isTabContentLoading}
-            >
-              <HiRefresh className={`h-3 w-3 ${isTabContentLoading ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
-            </button>
-          )}
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-2">
+            {generationStatus === 'complete' && (
+              <>
+                <button
+                  onClick={handleRefreshTabContent}
+                  className="text-xs flex items-center gap-1 text-indigo-500 hover:text-indigo-700"
+                  disabled={isTabContentLoading}
+                >
+                  <HiRefresh className={`h-3 w-3 ${isTabContentLoading ? 'animate-spin' : ''}`} />
+                  <span>Refresh</span>
+                </button>
+
+                <button
+                  onClick={() => handleSendToDashboard(true)}
+                  className="text-xs flex items-center gap-1 bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-1 rounded"
+                  disabled={isSendingToDashboard || isTabContentLoading}
+                  title="Generate structured dashboard widgets using AI (Recommended)"
+                >
+                  <HiViewGrid className="h-3 w-3" />
+                  <span>
+                    {isSendingToDashboard
+                      ? 'Generating...'
+                      : '🤖 Smart Send'
+                    }
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => handleSendToDashboard(false)}
+                  className={`text-xs flex items-center gap-1 ${
+                    tabsSentToDashboard.has(`${currentPersona}-${currentTab}`)
+                      ? 'text-green-600 hover:text-green-700'
+                      : 'text-blue-600 hover:text-blue-700'
+                  }`}
+                  disabled={isSendingToDashboard || isTabContentLoading}
+                  title="Parse current markdown content to dashboard"
+                >
+                  <HiViewGrid className="h-3 w-3" />
+                  <span>
+                    {tabsSentToDashboard.has(`${currentPersona}-${currentTab}`)
+                      ? 'Sent ✓'
+                      : 'Send'
+                    }
+                  </span>
+                </button>
+
+                {tabsSentToDashboard.has(`${currentPersona}-${currentTab}`) && (
+                  <a
+                    href={`/trial-dashboard/${projectId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs flex items-center gap-1 text-gray-600 hover:text-gray-800"
+                  >
+                    <span>View Dashboard →</span>
+                  </a>
+                )}
+              </>
+            )}
+          </div>
         </h3>
         
         {/* Change Request Input - Only show for non-general tabs with content */}
@@ -1401,7 +1547,11 @@ Please provide the updated content that addresses the change request while maint
           ) : (
             <div className="text-xs text-gray-500 dark:text-gray-400">
               {tabContent[tabKey] ? (
-                <SimpleMarkdownRenderer content={tabContent[tabKey]} />
+                <SimpleMarkdownRenderer
+                  content={tabContent[tabKey]}
+                  projectId={projectId || undefined}
+                  contextInfo={currentTab}
+                />
               ) : (
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Content for this tab will be generated based on your conversation with the AI.

@@ -7,9 +7,11 @@ import { generateAIResponse } from '../services/ai-client'
 interface MermaidDiagramProps {
   chart: string
   className?: string
+  projectId?: string
+  contextInfo?: string
 }
 
-const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ chart, className = '' }) => {
+const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ chart, className = '', projectId, contextInfo }) => {
   const elementRef = useRef<HTMLDivElement>(null)
   const [isError, setIsError] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -17,6 +19,11 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ chart, className = '' }
   const [errorMessage, setErrorMessage] = useState('')
   const [isFixing, setIsFixing] = useState(false)
   const [fixedChart, setFixedChart] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const [isSaved, setIsSaved] = useState(false)
+  const [showSaveDialog, setShowSaveDialog] = useState(false)
+  const [saveTitle, setSaveTitle] = useState('')
+  const [saveDescription, setSaveDescription] = useState('')
 
   useEffect(() => {
     // Initialize mermaid with white text/lines and transparent background
@@ -97,7 +104,7 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ chart, className = '' }
 
   const fixDiagram = async () => {
     setIsFixing(true)
-    
+
     try {
       const fixPrompt = `Please fix this Mermaid diagram syntax error. Here's the error message and the diagram code:
 
@@ -116,16 +123,16 @@ Please provide only the corrected Mermaid diagram code with proper syntax, enclo
 Return only the corrected diagram code, nothing else.`
 
       const result = await generateAIResponse(fixPrompt)
-      
+
       if (result.success && result.response) {
         // Extract the diagram code from the response
         const codeBlockMatch = result.response.match(/```(?:mermaid)?\s*\n([\s\S]*?)```/);
         const correctedChart = codeBlockMatch ? codeBlockMatch[1].trim() : result.response.trim();
-        
+
         setFixedChart(correctedChart)
         setIsError(false)
         setErrorMessage('')
-        
+
         // Trigger re-render with the fixed chart
         renderDiagram(correctedChart)
       }
@@ -133,6 +140,58 @@ Return only the corrected diagram code, nothing else.`
       console.error('Error fixing diagram:', error)
     } finally {
       setIsFixing(false)
+    }
+  }
+
+  const handleSaveDiagram = async () => {
+    if (!saveTitle.trim()) {
+      alert('Please enter a title for the diagram')
+      return
+    }
+
+    setIsSaving(true)
+
+    try {
+      const diagramToSave = fixedChart || chart
+
+      // Detect diagram type from the code
+      const typeMatch = diagramToSave.match(/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitgraph|mindmap|timeline)/i)
+      const diagramType = typeMatch ? typeMatch[1] : 'unknown'
+
+      const response = await fetch('/api/diagrams/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectId: projectId || 'default-project',
+          userId: 'default-user',
+          title: saveTitle,
+          description: saveDescription || null,
+          diagramCode: diagramToSave,
+          diagramType,
+          context: contextInfo ? { info: contextInfo } : null
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setIsSaved(true)
+        setShowSaveDialog(false)
+        setSaveTitle('')
+        setSaveDescription('')
+
+        // Reset saved indicator after 3 seconds
+        setTimeout(() => setIsSaved(false), 3000)
+      } else {
+        alert(`Failed to save diagram: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Error saving diagram:', error)
+      alert('Failed to save diagram')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -299,36 +358,129 @@ Return only the corrected diagram code, nothing else.`
   }
 
   return (
-    <div className={`mermaid-container bg-transparent rounded-lg p-4 border border-gray-200 dark:border-gray-700 ${className}`}>
-      {isError && (
-        <div className="mb-3 flex items-center justify-between bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded p-2">
-          <span className="text-yellow-600 dark:text-yellow-400 text-xs">Diagram has syntax errors</span>
+    <>
+      <div className={`mermaid-container bg-transparent rounded-lg p-4 border border-gray-200 dark:border-gray-700 ${className}`}>
+        <div className="flex justify-between items-center mb-3">
+          {isError && (
+            <div className="flex-1 flex items-center justify-between bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded p-2 mr-2">
+              <span className="text-yellow-600 dark:text-yellow-400 text-xs">Diagram has syntax errors</span>
+              <button
+                onClick={fixDiagram}
+                disabled={isFixing}
+                className="px-3 py-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white text-xs rounded flex items-center gap-1"
+              >
+                {isFixing ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Fixing...
+                  </>
+                ) : (
+                  'Fix Diagram'
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Save Button */}
           <button
-            onClick={fixDiagram}
-            disabled={isFixing}
-            className="px-3 py-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white text-xs rounded flex items-center gap-1"
+            onClick={() => setShowSaveDialog(true)}
+            disabled={isSaving}
+            className={`px-3 py-1 ${isSaved ? 'bg-green-500' : 'bg-indigo-500 hover:bg-indigo-600'} disabled:bg-gray-300 text-white text-xs rounded flex items-center gap-1`}
           >
-            {isFixing ? (
+            {isSaved ? (
               <>
-                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Fixing...
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Saved!
               </>
             ) : (
-              'Fix Diagram'
+              <>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                Save
+              </>
             )}
           </button>
         </div>
+
+        <div
+          ref={elementRef}
+          className="mermaid-diagram flex justify-center items-center min-h-[100px] overflow-auto"
+          style={{
+            maxWidth: '100%',
+            fontSize: '12px',
+            background: 'transparent'
+          }}
+        />
+      </div>
+
+      {/* Save Dialog Modal */}
+      {showSaveDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Save Diagram</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Title *
+                </label>
+                <input
+                  type="text"
+                  value={saveTitle}
+                  onChange={(e) => setSaveTitle(e.target.value)}
+                  placeholder="Enter diagram title"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={saveDescription}
+                  onChange={(e) => setSaveDescription(e.target.value)}
+                  placeholder="Optional description"
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                onClick={() => {
+                  setShowSaveDialog(false)
+                  setSaveTitle('')
+                  setSaveDescription('')
+                }}
+                className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                disabled={isSaving}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveDiagram}
+                disabled={isSaving || !saveTitle.trim()}
+                className="px-4 py-2 text-sm bg-indigo-500 hover:bg-indigo-600 disabled:bg-gray-300 text-white rounded-lg flex items-center gap-2"
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Saving...
+                  </>
+                ) : (
+                  'Save Diagram'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-      <div 
-        ref={elementRef}
-        className="mermaid-diagram flex justify-center items-center min-h-[100px] overflow-auto"
-        style={{ 
-          maxWidth: '100%',
-          fontSize: '12px',
-          background: 'transparent'
-        }}
-      />
-    </div>
+    </>
   )
 }
 
