@@ -83,6 +83,10 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<'login' | 'register'>('login')
+  const [showProjectModal, setShowProjectModal] = useState(false)
+  const [newProjectName, setNewProjectName] = useState('')
+  const [newProjectDescription, setNewProjectDescription] = useState('')
+  const [isCreating, setIsCreating] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -116,6 +120,47 @@ export default function Home() {
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
     setUser(null)
+  }
+
+  async function handleCreateProject(e: React.FormEvent) {
+    e.preventDefault()
+
+    if (!newProjectName.trim()) {
+      alert('Please enter a project name')
+      return
+    }
+
+    setIsCreating(true)
+
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: newProjectName.trim(),
+          description: newProjectDescription.trim() || undefined
+        })
+      })
+
+      if (res.ok) {
+        const result = await res.json()
+        if (result.success) {
+          // Navigate to the new project
+          router.push(`/${result.data.id}`)
+        } else {
+          alert(`Failed to create project: ${result.error}`)
+        }
+      } else {
+        const result = await res.json().catch(() => ({}))
+        alert(`Failed to create project: ${result.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Error creating project:', error)
+      alert('Failed to create project')
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   return (
@@ -168,24 +213,7 @@ export default function Home() {
                 </p>
               </div>
               <button
-                onClick={async () => {
-                  const name = prompt('Enter project name:')
-                  if (!name?.trim()) return
-
-                  const res = await fetch('/api/projects', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ name: name.trim() })
-                  })
-
-                  if (res.ok) {
-                    const result = await res.json()
-                    if (result.success) {
-                      router.push(`/${result.data.id}`)
-                    }
-                  }
-                }}
+                onClick={() => setShowProjectModal(true)}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium"
               >
                 Create Your First Project
@@ -194,6 +222,70 @@ export default function Home() {
           )}
         </div>
       </main>
+
+      {/* New Project Modal */}
+      {showProjectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">
+              Create New Project
+            </h3>
+
+            <form onSubmit={handleCreateProject} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Project Name *
+                </label>
+                <input
+                  type="text"
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  placeholder="e.g., LUMA-201 Phase III Trial"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  autoFocus
+                  disabled={isCreating}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description (Optional)
+                </label>
+                <textarea
+                  value={newProjectDescription}
+                  onChange={(e) => setNewProjectDescription(e.target.value)}
+                  placeholder="Brief description of your clinical trial project"
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  disabled={isCreating}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowProjectModal(false)
+                    setNewProjectName('')
+                    setNewProjectDescription('')
+                  }}
+                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
+                  disabled={isCreating}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreating || !newProjectName.trim()}
+                  className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white rounded-lg"
+                >
+                  {isCreating ? 'Creating...' : 'Create Project'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
