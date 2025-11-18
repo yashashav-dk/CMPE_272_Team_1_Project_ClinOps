@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import WidgetRenderer from './components/WidgetRenderer'
 import { HiRefresh, HiOutlineTrash, HiOutlineThumbUp, HiOutlineThumbDown } from 'react-icons/hi'
+import LogoutButton from '@/app/components/LogoutButton'
 
 interface DashboardWidget {
   id: string
@@ -221,31 +222,6 @@ export default function TrialDashboard() {
               >
                 Back to Chat
               </a>
-
-              <div className="flex items-center gap-1 ml-2">
-                <button
-                  className="p-1 rounded-full border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  title="Thumbs up feedback on dashboard"
-                  onClick={() => {
-                    setFeedbackRating('up')
-                    setFeedbackSubmitted(false)
-                    setIsFeedbackOpen(true)
-                  }}
-                >
-                  <HiOutlineThumbUp className="h-4 w-4" />
-                </button>
-                <button
-                  className="p-1 rounded-full border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  title="Thumbs down feedback on dashboard"
-                  onClick={() => {
-                    setFeedbackRating('down')
-                    setFeedbackSubmitted(false)
-                    setIsFeedbackOpen(true)
-                  }}
-                >
-                  <HiOutlineThumbDown className="h-4 w-4" />
-                </button>
-              </div>
             </div>
           </div>
         </div>
