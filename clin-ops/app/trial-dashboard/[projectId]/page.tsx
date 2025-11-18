@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import WidgetRenderer from './components/WidgetRenderer'
 import { HiRefresh, HiOutlineTrash } from 'react-icons/hi'
+import LogoutButton from '@/app/components/LogoutButton'
 
 interface DashboardWidget {
   id: string
@@ -176,6 +177,8 @@ export default function TrialDashboard() {
               >
                 Back to Chat
               </a>
+
+              <LogoutButton />
             </div>
           </div>
         </div>
