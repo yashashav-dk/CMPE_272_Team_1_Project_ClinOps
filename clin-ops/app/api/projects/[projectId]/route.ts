@@ -23,6 +23,14 @@ export async function GET(
     const project = await prisma.project.findUnique({
       where: {
         id: projectId
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+        userId: true
       }
     })
 
@@ -65,9 +73,17 @@ export async function PATCH(
   try {
     const payload = await verifyAuth(request)
     if (!payload) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+    const existingProject = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+        userId: true
+      }
+    })
     const { projectId } = await params
     const body = await request.json()
     const { name, description } = body

@@ -1,5 +1,6 @@
 'use client'
 
+import Feedback from './components/feedback'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
