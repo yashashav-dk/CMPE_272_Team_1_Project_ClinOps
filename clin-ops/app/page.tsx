@@ -2,7 +2,7 @@
 
 import Feedback from './components/feedback'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 type User = { id: string; email: string; name?: string; createdAt: string }
 
@@ -89,6 +89,15 @@ export default function Home() {
   const [newProjectDescription, setNewProjectDescription] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Sync auth mode from URL query (e.g. /?auth=login or /?auth=register)
+  useEffect(() => {
+    const authMode = searchParams.get('auth')
+    if (authMode === 'login' || authMode === 'register') {
+      setMode(authMode)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     let ignore = false
@@ -129,6 +138,21 @@ export default function Home() {
     setUser(null)
   }
 
+  async function createGuestProject() {
+    const projectId = `project-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+    if (typeof window !== 'undefined') {
+      const meta = {
+        name: newProjectName.trim(),
+        description: newProjectDescription.trim() || undefined
+      }
+      window.localStorage.setItem(`project:${projectId}:meta`, JSON.stringify(meta))
+    }
+    setShowProjectModal(false)
+    setNewProjectName('')
+    setNewProjectDescription('')
+    router.push(`/${projectId}`)
+  }
+
   async function handleCreateProject(e: React.FormEvent) {
     e.preventDefault()
 
@@ -161,22 +185,15 @@ export default function Home() {
           }
         } else {
           const result = await res.json().catch(() => ({}))
-          alert(`Failed to create project: ${result.error || 'Unknown error'}`)
+          if (res.status === 401 || result.error === 'Unauthorized') {
+            setUser(null)
+            await createGuestProject()
+          } else {
+            alert(`Failed to create project: ${result.error || 'Unknown error'}`)
+          }
         }
       } else {
-        // Guest user - create local project
-        const projectId = `project-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-        if (typeof window !== 'undefined') {
-          const meta = {
-            name: newProjectName.trim(),
-            description: newProjectDescription.trim() || undefined
-          }
-          window.localStorage.setItem(`project:${projectId}:meta`, JSON.stringify(meta))
-        }
-        setShowProjectModal(false)
-        setNewProjectName('')
-        setNewProjectDescription('')
-        router.push(`/${projectId}`)
+        await createGuestProject()
       }
     } catch (error) {
       console.error('Error creating project:', error)
@@ -184,6 +201,10 @@ export default function Home() {
     } finally {
       setIsCreating(false)
     }
+  }
+
+  function handleAuthSuccess(u: User) {
+    setUser(u)
   }
 
   return (
@@ -225,6 +246,12 @@ export default function Home() {
             <p className="text-sm text-gray-500">
               Start experimenting immediately. {!user && 'Create an account later to save your work.'}
             </p>
+
+            {!user && (
+              <div className="mt-8 w-full flex justify-center">
+                <AuthForm mode={mode} onSuccess={handleAuthSuccess} />
+              </div>
+            )}
           </div>
         </div>
       </main>
