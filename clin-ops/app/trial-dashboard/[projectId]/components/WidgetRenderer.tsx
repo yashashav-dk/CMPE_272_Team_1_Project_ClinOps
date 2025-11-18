@@ -182,7 +182,10 @@ export default function WidgetRenderer({ widget, onDelete }: WidgetProps) {
             </span>
             <span className="text-xs text-gray-400 dark:text-gray-500">•</span>
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              {widget.tabType.replace(/([A-Z])/g, ' $1').trim()}
+              {widget.tabType
+                .replace(/([A-Z])/g, ' $1')
+                .trim()
+                .replace(/^[a-zA-Z]/, (c) => c.toUpperCase())}
             </span>
           </div>
         </div>

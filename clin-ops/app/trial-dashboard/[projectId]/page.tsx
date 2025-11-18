@@ -273,7 +273,10 @@ export default function TrialDashboard() {
                 {/* Section Header */}
                 <div className="mb-4">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    {tabType.replace(/([A-Z])/g, ' $1').trim()}
+                    {tabType
+                      .replace(/([A-Z])/g, ' $1')
+                      .trim()
+                      .replace(/^[a-zA-Z]/, (c) => c.toUpperCase())}
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {widgets.length} widget{widgets.length !== 1 ? 's' : ''}
