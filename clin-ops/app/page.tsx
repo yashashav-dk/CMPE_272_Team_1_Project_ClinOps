@@ -93,22 +93,28 @@ export default function Home() {
   useEffect(() => {
     let ignore = false
     ;(async () => {
-      const res = await fetch('/api/auth/me', { credentials: 'include' })
-      if (res.ok) {
-        const u = await res.json()
-        if (!ignore) {
-          setUser(u)
-          // Redirect to first project if user is logged in
-          const projectsRes = await fetch('/api/projects', { credentials: 'include' })
-          if (projectsRes.ok) {
-            const result = await projectsRes.json()
-            if (result.success && result.data.length > 0) {
-              router.push(`/${result.data[0].id}`)
-              return
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' })
+        if (res.ok) {
+          const u = await res.json()
+          if (!ignore) {
+            setUser(u)
+            // Redirect to first project if user is logged in
+            const projectsRes = await fetch('/api/projects', { credentials: 'include' })
+            if (projectsRes.ok) {
+              const result = await projectsRes.json()
+              if (result.success && result.data.length > 0) {
+                router.push(`/${result.data[0].id}`)
+                return
+              }
             }
           }
+        } else {
+          if (!ignore) setUser(null)
         }
-      } else {
+      } catch (error) {
+        // Gracefully handle fetch errors - allow guest access
+        console.error('Auth check failed:', error)
         if (!ignore) setUser(null)
       }
       if (!ignore) setLoading(false)
@@ -134,27 +140,43 @@ export default function Home() {
     setIsCreating(true)
 
     try {
-      const res = await fetch('/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          name: newProjectName.trim(),
-          description: newProjectDescription.trim() || undefined
+      if (user) {
+        // Authenticated user - create project via API
+        const res = await fetch('/api/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            name: newProjectName.trim(),
+            description: newProjectDescription.trim() || undefined
+          })
         })
-      })
 
-      if (res.ok) {
-        const result = await res.json()
-        if (result.success) {
-          // Navigate to the new project
-          router.push(`/${result.data.id}`)
+        if (res.ok) {
+          const result = await res.json()
+          if (result.success) {
+            router.push(`/${result.data.id}`)
+          } else {
+            alert(`Failed to create project: ${result.error}`)
+          }
         } else {
-          alert(`Failed to create project: ${result.error}`)
+          const result = await res.json().catch(() => ({}))
+          alert(`Failed to create project: ${result.error || 'Unknown error'}`)
         }
       } else {
-        const result = await res.json().catch(() => ({}))
-        alert(`Failed to create project: ${result.error || 'Unknown error'}`)
+        // Guest user - create local project
+        const projectId = `project-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+        if (typeof window !== 'undefined') {
+          const meta = {
+            name: newProjectName.trim(),
+            description: newProjectDescription.trim() || undefined
+          }
+          window.localStorage.setItem(`project:${projectId}:meta`, JSON.stringify(meta))
+        }
+        setShowProjectModal(false)
+        setNewProjectName('')
+        setNewProjectDescription('')
+        router.push(`/${projectId}`)
       }
     } catch (error) {
       console.error('Error creating project:', error)
@@ -187,40 +209,23 @@ export default function Home() {
 
       <main className="flex-1">
         <div className="max-w-5xl mx-auto px-4 py-10">
-          {!user ? (
-            <div className="grid md:grid-cols-2 gap-10 items-start">
-              <div className="space-y-6">
-                <h1 className="text-3xl font-semibold">Welcome to ClinOps</h1>
-                <p className="text-gray-600">Sign up or log in to continue. Once authenticated, you will see the app experience below.</p>
-                <div className="flex gap-2">
-                  <button onClick={() => setMode('login')} className={`border rounded px-3 py-1 ${mode === 'login' ? 'bg-black text-white' : ''}`}>Login</button>
-                  <button onClick={() => setMode('register')} className={`border rounded px-3 py-1 ${mode === 'register' ? 'bg-black text-white' : ''}`}>Sign up</button>
-                </div>
-                <div className="pt-2">
-                  <AuthForm mode={mode} onSuccess={(u) => setUser(u)} />
-                </div>
-              </div>
-              <div className="border rounded p-4">
-                <div className="text-sm text-gray-600 mb-2">Preview</div>
-                <div className="text-gray-500">You will see the app here after logging in.</div>
-              </div>
+          <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
+            <div className="text-center space-y-4">
+              <h1 className="text-4xl font-bold">Welcome to ClinOps</h1>
+              <p className="text-gray-600 max-w-2xl text-lg">
+                Spin up a clinical trial project with an AI co-pilot in minutes. No login required to try it out.
+              </p>
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-              <div className="text-center space-y-4">
-                <h2 className="text-3xl font-semibold">Welcome to ClinOps</h2>
-                <p className="text-gray-600 max-w-md">
-                  You don't have any projects yet. Create your first clinical trial project to get started.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowProjectModal(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium"
-              >
-                Create Your First Project
-              </button>
-            </div>
-          )}
+            <button
+              onClick={() => setShowProjectModal(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg font-medium text-lg shadow-lg hover:shadow-xl transition-all"
+            >
+              Create a Project
+            </button>
+            <p className="text-sm text-gray-500">
+              Start experimenting immediately. {!user && 'Create an account later to save your work.'}
+            </p>
+          </div>
         </div>
       </main>
 
