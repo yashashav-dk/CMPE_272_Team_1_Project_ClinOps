@@ -26,6 +26,15 @@ interface DashboardData {
   tabCount: number
 }
 
+interface DashboardReview {
+  id: string
+  projectId: string
+  authorId: string
+  text: string
+  rating: number | null
+  createdAt: string
+}
+
 export default function TrialDashboard() {
   const params = useParams()
   const projectId = params?.projectId as string
@@ -38,6 +47,13 @@ export default function TrialDashboard() {
   const [feedbackRating, setFeedbackRating] = useState<'up' | 'down' | null>(null)
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+
+  const [reviews, setReviews] = useState<DashboardReview[]>([])
+  const [averageRating, setAverageRating] = useState<number | null>(null)
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false)
+  const [reviewText, setReviewText] = useState('')
+  const [reviewRating, setReviewRating] = useState<number | null>(null)
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false)
 
   const fetchDashboard = async () => {
     setIsLoading(true)
@@ -60,9 +76,27 @@ export default function TrialDashboard() {
     }
   }
 
+  const fetchReviews = async () => {
+    if (!projectId) return
+    setIsLoadingReviews(true)
+    try {
+      const response = await fetch(`/api/dashboard/${projectId}/reviews`)
+      const result = await response.json()
+      if (result.success) {
+        setReviews(result.data.reviews)
+        setAverageRating(result.data.averageRating)
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard reviews:', err)
+    } finally {
+      setIsLoadingReviews(false)
+    }
+  }
+
   useEffect(() => {
     if (projectId) {
       fetchDashboard()
+      fetchReviews()
     }
   }, [projectId])
 
@@ -154,6 +188,35 @@ export default function TrialDashboard() {
     }
   }
 
+  const handleSubmitReview = async () => {
+    if (!reviewText.trim()) return
+    try {
+      setIsSubmittingReview(true)
+      const response = await fetch(`/api/dashboard/${projectId}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          authorId: 'default-user',
+          text: reviewText.trim(),
+          rating: reviewRating
+        })
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        setReviewText('')
+        setReviewRating(null)
+        fetchReviews()
+      }
+    } catch (err) {
+      console.error('Error submitting dashboard review:', err)
+    } finally {
+      setIsSubmittingReview(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -237,7 +300,7 @@ export default function TrialDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-10">
         {!dashboardData || dashboardData.totalWidgets === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg p-12 text-center border border-gray-200 dark:border-gray-700">
             <svg
@@ -297,6 +360,102 @@ export default function TrialDashboard() {
             ))}
           </div>
         )}
+
+        {/* Reviews Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Dashboard Reviews</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Share and view overall reviews for this project dashboard.
+              </p>
+            </div>
+            {averageRating != null && (
+              <div className="text-right">
+                <div className="text-sm text-gray-500 dark:text-gray-400">Average Rating</div>
+                <div className="text-xl font-semibold text-yellow-500">
+                  {averageRating.toFixed(1)} / 5
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Reviews list */}
+            <div className="lg:col-span-2 space-y-3 max-h-64 overflow-y-auto pr-1">
+              {isLoadingReviews ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">Loading reviews...</p>
+              ) : reviews.length === 0 ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  No reviews yet. Be the first to add one below.
+                </p>
+              ) : (
+                reviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="border border-gray-200 dark:border-gray-700 rounded-md p-3 text-sm bg-gray-50 dark:bg-gray-900/40"
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {new Date(review.createdAt).toLocaleString()}
+                      </span>
+                      {review.rating != null && (
+                        <span className="text-xs font-medium text-yellow-500">
+                          {review.rating}/5
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-800 dark:text-gray-200 whitespace-pre-line">{review.text}</p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Add review form */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Add a Review</h3>
+              <textarea
+                className="w-full h-24 text-xs border border-gray-300 dark:border-gray-600 rounded p-2 mb-1 dark:bg-gray-900 dark:text-white"
+                placeholder="Write an overall review for this dashboard..."
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                disabled={isSubmittingReview}
+              />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                  <span>Rating:</span>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      className={`px-1 ${
+                        reviewRating === star
+                          ? 'text-yellow-500'
+                          : 'text-gray-400 dark:text-gray-500'
+                      }`}
+                      onClick={() => setReviewRating(reviewRating === star ? null : star)}
+                      disabled={isSubmittingReview}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className={`px-3 py-1 rounded text-white text-xs ${
+                    reviewText.trim() && !isSubmittingReview
+                      ? 'bg-indigo-500 hover:bg-indigo-600'
+                      : 'bg-gray-400 cursor-not-allowed'
+                  }`}
+                  onClick={handleSubmitReview}
+                  disabled={!reviewText.trim() || isSubmittingReview}
+                >
+                  {isSubmittingReview ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {isFeedbackOpen && (

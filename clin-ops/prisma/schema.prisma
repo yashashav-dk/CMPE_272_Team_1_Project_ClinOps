@@ -168,3 +168,15 @@ model Feedback {
 
   @@index([projectId], map: "idx_feedback_project_id")
 }
+
+model DashboardReview {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  authorId  String   @map("author_id")
+  text      String
+  rating    Int?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([projectId], map: "idx_dashboard_reviews_project_id")
+  @@map("dashboard_reviews")
+}
