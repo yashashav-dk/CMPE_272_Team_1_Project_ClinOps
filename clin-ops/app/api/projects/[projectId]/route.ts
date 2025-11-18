@@ -73,6 +73,14 @@ export async function PATCH(
   try {
     const payload = await verifyAuth(request)
     if (!payload) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { projectId } = await params
+    const body = await request.json()
+    const { name, description } = body
+
+    // Verify project exists and user owns it
     const existingProject = await prisma.project.findUnique({
       where: { id: projectId },
       select: {
@@ -83,14 +91,6 @@ export async function PATCH(
         updatedAt: true,
         userId: true
       }
-    })
-    const { projectId } = await params
-    const body = await request.json()
-    const { name, description } = body
-
-    // Verify project exists and user owns it
-    const existingProject = await prisma.project.findUnique({
-      where: { id: projectId }
     })
 
     if (!existingProject) {
@@ -112,7 +112,9 @@ export async function PATCH(
       where: { id: projectId },
       data: {
         ...(name && { name: name.trim() }),
-        ...(description !== undefined && { description: description?.trim() || null })
+        ...(description !== undefined && {
+          description: description?.trim() || null
+        })
       }
     })
 
