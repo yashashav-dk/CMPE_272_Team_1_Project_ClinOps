@@ -48,6 +48,8 @@ export default function TrialDashboard() {
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
 
+  const [reviewSort, setReviewSort] = useState<'newest' | 'highest'>('newest')
+
   const [reviews, setReviews] = useState<DashboardReview[]>([])
   const [averageRating, setAverageRating] = useState<number | null>(null)
   const [isLoadingReviews, setIsLoadingReviews] = useState(false)
@@ -244,25 +246,47 @@ export default function TrialDashboard() {
     )
   }
 
+  const totalWidgets = dashboardData?.totalWidgets || 0
+  const tabCount = dashboardData?.tabCount || 0
+  const mostPopulatedTab = dashboardData?.widgetsByTab
+    ? Object.entries(dashboardData.widgetsByTab).reduce(
+        (top, [tab, widgets]) => {
+          if (!top) return { tab, count: widgets.length }
+          return widgets.length > top.count ? { tab, count: widgets.length } : top
+        },
+        null as { tab: string; count: number } | null
+      )
+    : null
+
+  const sortedReviews = [...reviews].sort((a, b) => {
+    if (reviewSort === 'newest') {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    }
+    const ratingA = a.rating ?? 0
+    const ratingB = b.rating ?? 0
+    if (ratingB !== ratingA) return ratingB - ratingA
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+      <div className="bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10 backdrop-blur">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
                 Clinical Trial Dashboard
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {dashboardData?.totalWidgets || 0} widgets across {dashboardData?.tabCount || 0} categories
+              <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                {totalWidgets} widgets across {tabCount} categories
               </p>
             </div>
 
             <div className="flex gap-2 items-center">
               <button
                 onClick={fetchDashboard}
-                className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"
+                className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 rounded-lg flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm"
               >
                 <HiRefresh className="w-4 h-4" />
                 Refresh
@@ -271,7 +295,7 @@ export default function TrialDashboard() {
               {dashboardData && dashboardData.totalWidgets > 0 && (
                 <button
                   onClick={handleClearAll}
-                  className="px-4 py-2 bg-white dark:bg-gray-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-400 rounded-lg flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className="px-4 py-2 bg-red-50 dark:bg-red-950/40 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 rounded-lg flex items-center gap-2 hover:bg-red-100 dark:hover:bg-red-900/60 shadow-sm"
                 >
                   <HiOutlineTrash className="w-4 h-4" />
                   Clear All
@@ -281,7 +305,7 @@ export default function TrialDashboard() {
               <button
                 type="button"
                 onClick={() => setIsFeedbackOpen(true)}
-                className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg flex items-center gap-1 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs"
+                className="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-100 rounded-lg flex items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs shadow-sm"
               >
                 <HiOutlineThumbUp className="w-4 h-4" />
                 <HiOutlineThumbDown className="w-4 h-4" />
@@ -290,10 +314,33 @@ export default function TrialDashboard() {
 
               <a
                 href={`/${projectId}`}
-                className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg"
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm"
               >
                 Back to Chat
               </a>
+            </div>
+          </div>
+
+          {/* Summary strip */}
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <div className="bg-indigo-500/20 dark:bg-indigo-500/40 rounded-lg px-4 py-3 border border-indigo-500 dark:border-indigo-700 shadow-sm">
+              <div className="text-xs font-medium uppercase tracking-wide text-indigo-700 dark:text-indigo-300">Total widgets</div>
+              <div className="mt-1 text-2xl font-semibold text-indigo-900 dark:text-indigo-100">{totalWidgets}</div>
+            </div>
+            <div className="bg-emerald-500/20 dark:bg-emerald-500/40 rounded-lg px-4 py-3 border border-emerald-500 dark:border-emerald-700 shadow-sm">
+              <div className="text-xs font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Categories</div>
+              <div className="mt-1 text-2xl font-semibold text-emerald-900 dark:text-emerald-100">{tabCount}</div>
+            </div>
+            <div className="bg-amber-500/20 dark:bg-amber-500/40 rounded-lg px-4 py-3 border border-amber-500 dark:border-amber-700 shadow-sm">
+              <div className="text-xs font-medium uppercase tracking-wide text-amber-700 dark:text-amber-300">Most populated category</div>
+              <div className="mt-1 text-sm font-semibold text-amber-900 dark:text-amber-50 truncate">
+                {mostPopulatedTab
+                  ? `${mostPopulatedTab.tab
+                      .replace(/([A-Z])/g, ' $1')
+                      .trim()
+                      .replace(/^[a-zA-Z]/, (c) => c.toUpperCase())} (${mostPopulatedTab.count})`
+                  : '—'}
+              </div>
             </div>
           </div>
         </div>
@@ -302,7 +349,7 @@ export default function TrialDashboard() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-10">
         {!dashboardData || dashboardData.totalWidgets === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-12 text-center border border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-dashed border-slate-300 dark:border-slate-700 shadow-sm">
             <svg
               className="w-16 h-16 mx-auto mb-4 text-gray-400"
               fill="none"
@@ -319,7 +366,7 @@ export default function TrialDashboard() {
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
               No dashboard content yet
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-slate-600 dark:text-slate-300 mb-4">
               Start by sending content from the chat interface using the "Send to Dashboard" button.
             </p>
             <a
@@ -331,72 +378,114 @@ export default function TrialDashboard() {
           </div>
         ) : (
           <div className="space-y-8">
-            {Object.entries(dashboardData.widgetsByTab).map(([tabType, widgets]) => (
-              <div key={tabType}>
-                {/* Section Header */}
-                <div className="mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    {tabType
-                      .replace(/([A-Z])/g, ' $1')
-                      .trim()
-                      .replace(/^[a-zA-Z]/, (c) => c.toUpperCase())}
-                  </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {widgets.length} widget{widgets.length !== 1 ? 's' : ''}
-                  </p>
-                </div>
+            {Object.entries(dashboardData.widgetsByTab).map(([tabType, widgets]) => {
+              const lastUpdated = widgets.reduce((latest, w) => {
+                const t = new Date(w.updatedAt).getTime()
+                return t > latest ? t : latest
+              }, 0)
 
-                {/* Widgets Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {widgets.map((widget) => (
-                    <WidgetRenderer
-                      key={widget.id}
-                      widget={widget}
-                      onDelete={handleDeleteWidget}
-                    />
-                  ))}
+              const formattedTabLabel = tabType
+                .replace(/([A-Z])/g, ' $1')
+                .trim()
+                .replace(/^[a-zA-Z]/, (c) => c.toUpperCase())
+
+              return (
+                <div key={tabType} className="border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950/60 shadow-md">
+                  {/* Section Header */}
+                  <div className="px-5 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
+                    <div>
+                      <div className="inline-flex items-center gap-2 rounded-full bg-indigo-600/10 dark:bg-indigo-500/20 px-3 py-1 mb-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 dark:bg-indigo-300" />
+                        <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-200">
+                          {formattedTabLabel}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        {widgets.length} widget{widgets.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    {lastUpdated > 0 && (
+                      <div className="text-right text-[11px] text-slate-500 dark:text-slate-400">
+                        <div>Last updated</div>
+                        <div className="font-medium">
+                          {new Date(lastUpdated).toLocaleDateString()}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Widgets Grid */}
+                  <div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {widgets.map((widget) => (
+                      <WidgetRenderer
+                        key={widget.id}
+                        widget={widget}
+                        onDelete={handleDeleteWidget}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
         {/* Reviews Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-          <div className="flex justify-between items-start mb-4">
+        <div className="bg-white dark:bg-slate-950 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-md">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Dashboard Reviews</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Dashboard Reviews</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-300">
                 Share and view overall reviews for this project dashboard.
               </p>
             </div>
-            {averageRating != null && (
-              <div className="text-right">
-                <div className="text-sm text-gray-500 dark:text-gray-400">Average Rating</div>
-                <div className="text-xl font-semibold text-yellow-500">
-                  {averageRating.toFixed(1)} / 5
+            <div className="flex items-center gap-4">
+              {averageRating != null && (
+                <div className="text-right">
+                  <div className="text-sm text-slate-500 dark:text-slate-400">Average Rating</div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex text-yellow-400 text-base drop-shadow-[0_0_6px_rgba(250,204,21,0.55)]">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <span key={i}>{i + 1 <= Math.round(averageRating) ? '★' : '☆'}</span>
+                      ))}
+                    </div>
+                    <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                      {averageRating.toFixed(1)} / 5
+                    </span>
+                  </div>
                 </div>
+              )}
+              <div className="text-xs text-slate-600 dark:text-slate-200">
+                <label className="mr-1">Sort:</label>
+                <select
+                  className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 bg-white dark:bg-slate-900"
+                  value={reviewSort}
+                  onChange={(e) => setReviewSort(e.target.value as 'newest' | 'highest')}
+                >
+                  <option value="newest">Newest first</option>
+                  <option value="highest">Highest rating</option>
+                </select>
               </div>
-            )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Reviews list */}
             <div className="lg:col-span-2 space-y-3 max-h-64 overflow-y-auto pr-1">
               {isLoadingReviews ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400">Loading reviews...</p>
+                <p className="text-sm text-slate-500 dark:text-slate-300">Loading reviews...</p>
               ) : reviews.length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-slate-500 dark:text-slate-300">
                   No reviews yet. Be the first to add one below.
                 </p>
               ) : (
-                reviews.map((review) => (
+                sortedReviews.map((review) => (
                   <div
                     key={review.id}
-                    className="border border-gray-200 dark:border-gray-700 rounded-md p-3 text-sm bg-gray-50 dark:bg-gray-900/40"
+                    className="border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm bg-slate-50 dark:bg-slate-900/60"
                   >
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                      <span className="text-xs text-slate-500 dark:text-slate-300">
                         {new Date(review.createdAt).toLocaleString()}
                       </span>
                       {review.rating != null && (
@@ -405,7 +494,7 @@ export default function TrialDashboard() {
                         </span>
                       )}
                     </div>
-                    <p className="text-gray-800 dark:text-gray-200 whitespace-pre-line">{review.text}</p>
+                    <p className="text-slate-800 dark:text-slate-100 whitespace-pre-line">{review.text}</p>
                   </div>
                 ))
               )}
@@ -413,16 +502,16 @@ export default function TrialDashboard() {
 
             {/* Add review form */}
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Add a Review</h3>
+              <h3 className="text-sm font-medium text-slate-900 dark:text-slate-50">Add a Review</h3>
               <textarea
-                className="w-full h-24 text-xs border border-gray-300 dark:border-gray-600 rounded p-2 mb-1 dark:bg-gray-900 dark:text-white"
+                className="w-full h-24 text-xs border border-slate-300 dark:border-slate-600 rounded-lg p-2 mb-1 dark:bg-slate-900 dark:text-slate-50"
                 placeholder="Write an overall review for this dashboard..."
                 value={reviewText}
                 onChange={(e) => setReviewText(e.target.value)}
                 disabled={isSubmittingReview}
               />
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-200">
                   <span>Rating:</span>
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -430,8 +519,8 @@ export default function TrialDashboard() {
                       type="button"
                       className={`px-1 ${
                         reviewRating === star
-                          ? 'text-yellow-500'
-                          : 'text-gray-400 dark:text-gray-500'
+                          ? 'text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.55)]'
+                          : 'text-slate-400 dark:text-slate-500'
                       }`}
                       onClick={() => setReviewRating(reviewRating === star ? null : star)}
                       disabled={isSubmittingReview}
@@ -442,10 +531,10 @@ export default function TrialDashboard() {
                 </div>
                 <button
                   type="button"
-                  className={`px-3 py-1 rounded text-white text-xs ${
+                  className={`px-3 py-1 rounded text-white text-xs shadow-sm ${
                     reviewText.trim() && !isSubmittingReview
-                      ? 'bg-indigo-500 hover:bg-indigo-600'
-                      : 'bg-gray-400 cursor-not-allowed'
+                      ? 'bg-indigo-600 hover:bg-indigo-700'
+                      : 'bg-slate-400 cursor-not-allowed'
                   }`}
                   onClick={handleSubmitReview}
                   disabled={!reviewText.trim() || isSubmittingReview}
