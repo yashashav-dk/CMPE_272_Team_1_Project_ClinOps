@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: clinops-app
+  namespace: clinops
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: clinops-app
+  namespace: clinops
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: clinops-app
+  namespace: clinops
+subjects:
+  - kind: ServiceAccount
+    name: clinops-app
+roleRef:
+  kind: Role
+  name: clinops-app
+  apiGroup: rbac.authorization.k8s.io

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-app-overview
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+data:
+  app-overview.json: |
+    { "title": "App Overview", "uid": "k8s-app-overview", "time": {"from":"now-6h","to":"now"},
+      "panels": [
+        {"type":"timeseries","title":"HTTP Requests","targets":[{"expr":"sum(rate(http_requests_total[5m]))"}]},
+        {"type":"timeseries","title":"Request p95","targets":[{"expr":"histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))"}]}
+      ]
+    }

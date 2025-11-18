@@ -1,0 +1,22 @@
+{
+  "title": "App Overview",
+  "uid": "app-overview",
+  "time": {"from": "now-6h", "to": "now"},
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "CPU User Seconds",
+      "targets": [{"expr": "process_cpu_user_seconds_total"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Event Loop Lag",
+      "targets": [{"expr": "nodejs_eventloop_lag_seconds"}]
+    },
+    {
+      "type": "stat",
+      "title": "HTTP Requests",
+      "targets": [{"expr": "sum(rate(http_request_duration_seconds_count[5m]))"}]
+    }
+  ]
+}
