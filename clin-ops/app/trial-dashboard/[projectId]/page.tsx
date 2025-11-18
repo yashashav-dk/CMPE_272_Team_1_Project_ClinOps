@@ -211,9 +211,12 @@ export default function TrialDashboard() {
         setReviewText('')
         setReviewRating(null)
         fetchReviews()
+      } else {
+        alert(result.error || 'Failed to submit review')
       }
     } catch (err) {
       console.error('Error submitting dashboard review:', err)
+      alert('Failed to submit review')
     } finally {
       setIsSubmittingReview(false)
     }
