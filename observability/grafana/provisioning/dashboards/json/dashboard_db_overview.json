@@ -1,0 +1,17 @@
+{
+  "title": "Database Overview",
+  "uid": "db-overview",
+  "time": {"from": "now-6h", "to": "now"},
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Prisma Query Duration p95",
+      "targets": [{"expr": "histogram_quantile(0.95, sum(rate(prisma_client_query_duration_seconds_bucket[5m])) by (le))"}]
+    },
+    {
+      "type": "stat",
+      "title": "Queries per second",
+      "targets": [{"expr": "sum(rate(prisma_client_queries_total[1m]))"}]
+    }
+  ]
+}

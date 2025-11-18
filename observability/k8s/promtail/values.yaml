@@ -1,0 +1,8 @@
+config:
+  snippets:
+    pipelineStages:
+      - drop:
+          expression: "(?i)(password|authorization|cookie|set-cookie|ssn|dob)"
+          source: log
+  clients:
+    - url: http://loki.observability.svc:3100/loki/api/v1/push
