@@ -28,8 +28,8 @@ export default function ProjectLayout({
         if (!ignore) setUser(u)
       } else {
         if (!ignore) {
+          // Guest user - allow access without redirecting
           setUser(null)
-          router.push('/')
         }
       }
       if (!ignore) setLoading(false)
@@ -47,13 +47,9 @@ export default function ProjectLayout({
     )
   }
 
-  if (!user) {
-    return null
-  }
-
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar currentUser={user} />
+      {user && <Sidebar currentUser={user} />}
       <div className="flex-1 overflow-auto">
         {children}
       </div>
