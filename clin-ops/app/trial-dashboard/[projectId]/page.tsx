@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import WidgetRenderer from './components/WidgetRenderer'
-import { HiRefresh, HiOutlineTrash } from 'react-icons/hi'
+import { HiRefresh, HiOutlineTrash, HiOutlineThumbUp, HiOutlineThumbDown } from 'react-icons/hi'
 
 interface DashboardWidget {
   id: string
@@ -214,6 +214,16 @@ export default function TrialDashboard() {
                   Clear All
                 </button>
               )}
+
+              <button
+                type="button"
+                onClick={() => setIsFeedbackOpen(true)}
+                className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg flex items-center gap-1 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs"
+              >
+                <HiOutlineThumbUp className="w-4 h-4" />
+                <HiOutlineThumbDown className="w-4 h-4" />
+                <span>Feedback</span>
+              </button>
 
               <a
                 href={`/${projectId}`}

@@ -39,7 +39,7 @@ export default function WidgetRenderer({ widget, onDelete }: WidgetProps) {
         return (
           <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-lg p-6">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 capitalize">
                 {widget.title}
               </h4>
               {widget.content.status && (
@@ -172,7 +172,7 @@ export default function WidgetRenderer({ widget, onDelete }: WidgetProps) {
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           {widget.widgetType !== 'kpi' && (
-            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1 capitalize">
               {widget.title}
             </h3>
           )}
