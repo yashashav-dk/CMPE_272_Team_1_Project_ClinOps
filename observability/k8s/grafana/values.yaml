@@ -1,0 +1,30 @@
+admin:
+  existingSecret: grafana-admin
+  userKey: admin-user
+  passwordKey: admin-password
+
+service:
+  type: ClusterIP
+
+persistence:
+  enabled: true
+  size: 5Gi
+
+rbac:
+  pspEnabled: false
+
+sidecar:
+  datasources:
+    enabled: true
+    label: grafana_datasource
+  dashboards:
+    enabled: true
+    label: grafana_dashboard
+
+env:
+  GF_AUTH_ANONYMOUS_ENABLED: "false"
+  GF_SECURITY_ALLOW_EMBEDDING: "false"
+  GF_SECURITY_COOKIE_SECURE: "true"
+  GF_SECURITY_COOKIE_SAMESITE: "strict"
+  GF_SERVER_PROTOCOL: https
+  GF_SERVER_ENFORCE_DOMAIN: "true"

@@ -1,0 +1,13 @@
+loki:
+  auth_enabled: false
+  commonConfig:
+    replication_factor: 1
+  storage:
+    type: filesystem
+  persistence:
+    enabled: true
+    size: 10Gi
+  ruler:
+    alertmanager_url: http://kube-prometheus-stack-alertmanager.observability.svc:9093
+service:
+  type: ClusterIP

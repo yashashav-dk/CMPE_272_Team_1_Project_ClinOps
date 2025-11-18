@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { verifyAuth } from '@/lib/auth'
-
-const prisma = new PrismaClient()
+import { getLogger } from '@/lib/logger'
+import { recordHttpRequest, startTimer } from '@/lib/metrics'
 
 /**
  * GET /api/projects
@@ -10,8 +10,12 @@ const prisma = new PrismaClient()
  */
 export async function GET(request: NextRequest) {
   try {
+    const cid = request.headers.get('x-correlation-id') || undefined
+    const logger = getLogger(cid)
+    const end = startTimer({ method: 'GET', route: '/api/projects' })
     const payload = await verifyAuth(request)
     if (!payload) {
+      recordHttpRequest('GET', '/api/projects', 401)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -24,12 +28,16 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       data: projects
     })
+    recordHttpRequest('GET', '/api/projects', 200)
+    end({ status: '200' as any })
+    logger.info({ userId: payload.userId, count: projects.length }, 'Fetched projects')
+    return res
   } catch (error) {
-    console.error('Error fetching projects:', error)
+    recordHttpRequest('GET', '/api/projects', 500)
     return NextResponse.json(
       { success: false, error: 'Failed to fetch projects' },
       { status: 500 }
@@ -43,8 +51,12 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const cid = request.headers.get('x-correlation-id') || undefined
+    const logger = getLogger(cid)
+    const end = startTimer({ method: 'POST', route: '/api/projects' })
     const payload = await verifyAuth(request)
     if (!payload) {
+      recordHttpRequest('POST', '/api/projects', 401)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -52,10 +64,13 @@ export async function POST(request: NextRequest) {
     const { name, description } = body
 
     if (!name?.trim()) {
-      return NextResponse.json(
+      recordHttpRequest('POST', '/api/projects', 400)
+      const res = NextResponse.json(
         { success: false, error: 'Project name is required' },
         { status: 400 }
       )
+      end({ status: '400' as any })
+      return res
     }
 
     const project = await prisma.project.create({
@@ -67,12 +82,16 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       data: project
     })
+    recordHttpRequest('POST', '/api/projects', 201)
+    end({ status: '201' as any })
+    logger.info({ userId: payload.userId, projectId: project.id }, 'Created project')
+    return res
   } catch (error) {
-    console.error('Error creating project:', error)
+    recordHttpRequest('POST', '/api/projects', 500)
     return NextResponse.json(
       { success: false, error: 'Failed to create project' },
       { status: 500 }

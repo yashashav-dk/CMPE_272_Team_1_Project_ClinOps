@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-api-performance
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+data:
+  api-performance.json: |
+    { "title": "API Performance", "uid": "k8s-api-perf", "time": {"from":"now-6h","to":"now"},
+      "panels": [
+        {"type":"timeseries","title":"5xx Error Rate","targets":[{"expr":"sum(rate(http_requests_errors_total{status=~\\"5..\\"}[5m]))"}]},
+        {"type":"timeseries","title":"Prisma p95","targets":[{"expr":"histogram_quantile(0.95, sum(rate(prisma_client_query_duration_seconds_bucket[5m])) by (le))"}]}
+      ]
+    }
