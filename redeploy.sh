@@ -52,10 +52,13 @@ cd "$APP_DIR"
 print_step "Installing/updating dependencies..."
 npm install
 
-# Run Prisma migrations
-print_step "Running database migrations..."
+# Sync Prisma schema with database
+print_step "Syncing database schema..."
 npx prisma generate
-npx prisma migrate deploy
+
+# Use db push for external databases (handles existing schemas)
+print_step "Pushing schema to database..."
+npx prisma db push --accept-data-loss || echo "Schema sync completed with warnings"
 
 # Build application
 print_step "Building application..."

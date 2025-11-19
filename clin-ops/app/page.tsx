@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 type User = { id: string; email: string; name?: string; createdAt: string }
@@ -79,7 +79,21 @@ function AuthForm({ mode, onSuccess }: AuthFormProps) {
   )
 }
 
-export default function Home() {
+// Component that uses useSearchParams - must be wrapped in Suspense
+function AuthModeDetector({ setMode }: { setMode: (mode: 'login' | 'register') => void }) {
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const authMode = searchParams.get('auth')
+    if (authMode === 'login' || authMode === 'register') {
+      setMode(authMode)
+    }
+  }, [searchParams, setMode])
+
+  return null
+}
+
+function HomeContent() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<'login' | 'register'>('login')
@@ -88,14 +102,6 @@ export default function Home() {
   const [newProjectDescription, setNewProjectDescription] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const router = useRouter()
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    const authMode = searchParams.get('auth')
-    if (authMode === 'login' || authMode === 'register') {
-      setMode(authMode)
-    }
-  }, [searchParams])
 
   useEffect(() => {
     let ignore = false
@@ -829,6 +835,24 @@ export default function Home() {
           </div>
         </div>
       )}
+      
+      {/* Auth mode detector wrapped in Suspense */}
+      <Suspense fallback={null}>
+        <AuthModeDetector setMode={setMode} />
+      </Suspense>
     </div>
+  )
+}
+
+// Default export with Suspense boundary
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800">
+        <div className="text-white">Loading...</div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   )
 }

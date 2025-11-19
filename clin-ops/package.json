@@ -4,9 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:sync": "prisma db push && next dev --turbopack",
     "build": "prisma generate && next build --turbopack",
     "start": "next start",
     "prisma:generate": "prisma generate",
+    "prisma:sync": "prisma db push",
+    "prisma:baseline": "prisma migrate resolve --applied",
     "lint": "eslint",
     "test": "jest",
     "test:watch": "jest --watch",
