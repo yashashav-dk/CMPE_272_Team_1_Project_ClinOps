@@ -1,4 +1,3 @@
-
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
@@ -21,6 +20,13 @@ type Message = {
   text: string
   sender: 'user' | 'ai'
   persona?: Persona
+}
+
+type AuthUser = {
+  id: string
+  email: string
+  name?: string
+  createdAt?: string
 }
 
 // Essential project questions
@@ -240,7 +246,7 @@ const SimpleMarkdownRenderer: React.FC<{ content: string; projectId?: string; co
 
 SimpleMarkdownRenderer.displayName = 'SimpleMarkdownRenderer';
 
-export default function ContextAwareChat() {
+export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
   // Get project ID from URL parameters, generate one if not provided
   const { projectId: urlProjectId } = useParams()
   const [projectId, setProjectId] = useState<string | null>(null)
