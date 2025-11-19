@@ -70,8 +70,8 @@ export async function POST(request: Request) {
 
     const chatId = crypto.randomUUID();
 
-    await prisma.$transaction(async (tx) => {
-      // Ensure project exists
+    await prisma.$transaction(async (tx: any) => {
+      // Ensure project exists (Project.userId is required in schema)
       await tx.project.upsert({
         where: { id: projectId },
         update: { name: `Project ${projectId}`, description: 'Auto-generated project for chat data', userId },
