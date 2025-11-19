@@ -219,7 +219,11 @@ const SimpleMarkdownRenderer: React.FC<{ content: string; projectId?: string; co
   );
 };
 
-export default function ContextAwareChat() {
+interface ContextAwareChatProps {
+  user?: { id: string; email: string; name?: string; createdAt?: string } | null
+}
+
+export default function ContextAwareChat({ user }: ContextAwareChatProps = {}) {
   // Get project ID from URL parameters, generate one if not provided
   const { projectId: urlProjectId } = useParams()
   const [projectId, setProjectId] = useState<string | null>(null)
@@ -1449,39 +1453,43 @@ Please provide the updated content that addresses the change request while maint
                   <span>Refresh</span>
                 </button>
 
-                <button
-                  onClick={() => handleSendToDashboard(true)}
-                  className="text-xs flex items-center gap-1 bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-1 rounded"
-                  disabled={isSendingToDashboard || isTabContentLoading}
-                  title="Generate structured dashboard widgets using AI (Recommended)"
-                >
-                  <HiViewGrid className="h-3 w-3" />
-                  <span>
-                    {isSendingToDashboard
-                      ? 'Generating...'
-                      : '🤖 Smart Send'
-                    }
-                  </span>
-                </button>
+                {user && (
+                  <>
+                    <button
+                      onClick={() => handleSendToDashboard(true)}
+                      className="text-xs flex items-center gap-1 bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-1 rounded"
+                      disabled={isSendingToDashboard || isTabContentLoading}
+                      title="Generate structured dashboard widgets using AI (Recommended)"
+                    >
+                      <HiViewGrid className="h-3 w-3" />
+                      <span>
+                        {isSendingToDashboard
+                          ? 'Generating...'
+                          : '🤖 Smart Send'
+                        }
+                      </span>
+                    </button>
 
-                <button
-                  onClick={() => handleSendToDashboard(false)}
-                  className={`text-xs flex items-center gap-1 ${
-                    tabsSentToDashboard.has(`${currentPersona}-${currentTab}`)
-                      ? 'text-green-600 hover:text-green-700'
-                      : 'text-blue-600 hover:text-blue-700'
-                  }`}
-                  disabled={isSendingToDashboard || isTabContentLoading}
-                  title="Parse current markdown content to dashboard"
-                >
-                  <HiViewGrid className="h-3 w-3" />
-                  <span>
-                    {tabsSentToDashboard.has(`${currentPersona}-${currentTab}`)
-                      ? 'Sent ✓'
-                      : 'Send'
-                    }
-                  </span>
-                </button>
+                    <button
+                      onClick={() => handleSendToDashboard(false)}
+                      className={`text-xs flex items-center gap-1 ${
+                        tabsSentToDashboard.has(`${currentPersona}-${currentTab}`)
+                          ? 'text-green-600 hover:text-green-700'
+                          : 'text-blue-600 hover:text-blue-700'
+                      }`}
+                      disabled={isSendingToDashboard || isTabContentLoading}
+                      title="Parse current markdown content to dashboard"
+                    >
+                      <HiViewGrid className="h-3 w-3" />
+                      <span>
+                        {tabsSentToDashboard.has(`${currentPersona}-${currentTab}`)
+                          ? 'Sent ✓'
+                          : 'Send'
+                        }
+                      </span>
+                    </button>
+                  </>
+                )}
 
                 {tabsSentToDashboard.has(`${currentPersona}-${currentTab}`) && (
                   <a
@@ -1610,9 +1618,9 @@ Please provide the updated content that addresses the change request while maint
     )
   }
 
-  const sharedTabBase = 'px-3.5 py-2 text-sm font-semibold rounded-lg transition-all duration-300 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400';
+  const sharedTabBase = 'px-3.5 py-2 text-sm font-semibold rounded-lg focus-visible:outline-indigo-400';
   const activeTabClasses = 'bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 text-white shadow-xl border border-indigo-400/60 ';
-  const inactiveTabClasses = 'text-gray-300 border border-transparent hover:text-white hover:bg-gray-800/70 hover:border-gray-700 hover:-translate-y-0.5';
+  const inactiveTabClasses = 'text-gray-300 border border-transparent hover:text-white hover:bg-gray-800/70 hover:border-gray-700 hover:-translate-x-y-0.5';
   const getTabClasses = (tab: TabType) => `${sharedTabBase} ${currentTab === tab ? activeTabClasses : inactiveTabClasses}`;
 
   return (
@@ -1815,13 +1823,15 @@ Please provide the updated content that addresses the change request while maint
                 disabled={isLoading}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               />
-              <button
-                className={`${isLoading ? 'bg-gray-400' : 'bg-indigo-500 hover:bg-indigo-600'} text-white px-4 rounded-r h-10 flex items-center justify-center`}
-                onClick={handleSendMessage}
-                disabled={isLoading}
-              >
-                <HiPaperAirplane className="h-4 w-4" />
-              </button>
+              {user && (
+                <button
+                  className={`${isLoading ? 'bg-gray-400' : 'bg-indigo-500 hover:bg-indigo-600'} text-white px-4 rounded-r h-10 flex items-center justify-center`}
+                  onClick={handleSendMessage}
+                  disabled={isLoading}
+                >
+                  <HiPaperAirplane className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
         </div>

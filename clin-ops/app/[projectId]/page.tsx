@@ -82,7 +82,7 @@ export default function ProjectChatPage() {
         </div>
       </header>
       <main className="flex-1 overflow-hidden">
-        <ContextAwareChat key={projectId} />
+        <ContextAwareChat key={projectId} user={user} />
       </main>
     </div>
   )
