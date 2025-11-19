@@ -3,6 +3,9 @@
 import React from 'react'
 import MermaidDiagram from '@/app/MermaidDiagram'
 import ReactMarkdown from 'react-markdown'
+import InteractiveTimeline from './InteractiveTimeline'
+import InteractiveWorkflow from './InteractiveWorkflow'
+import InteractiveChecklist from './InteractiveChecklist'
 
 interface WidgetProps {
   widget: {
@@ -116,38 +119,20 @@ export default function WidgetRenderer({ widget, onDelete }: WidgetProps) {
 
       case 'timeline':
         return (
-          <div className="space-y-4">
-            {widget.content.milestones.map((milestone: any, idx: number) => (
-              <div key={idx} className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-24 text-sm font-medium text-gray-600 dark:text-gray-400">
-                  {milestone.date}
-                </div>
-                <div className="flex-1">
-                  <div className="relative pl-4 border-l-2 border-indigo-200 dark:border-indigo-800 pb-4">
-                    <div className="absolute left-0 top-0 w-3 h-3 bg-indigo-500 rounded-full -translate-x-[7px]"></div>
-                    <p className="text-sm text-gray-900 dark:text-gray-100">
-                      {milestone.event}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <InteractiveTimeline milestones={widget.content.milestones} />
+        )
+
+      case 'workflow':
+        return (
+          <InteractiveWorkflow steps={widget.content.steps} />
         )
 
       case 'list':
         return (
-          <ul className="space-y-2">
-            {widget.content.items.map((item: string, idx: number) => (
-              <li
-                key={idx}
-                className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
-              >
-                <span className="text-indigo-500 mt-1">•</span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+          <InteractiveChecklist 
+            items={widget.content.items} 
+            listType={widget.content.listType}
+          />
         )
 
       case 'text':
