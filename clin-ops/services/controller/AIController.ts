@@ -26,13 +26,32 @@ class GeminiProvider implements LLMProvider {
 
   private isRetryableError(error: any): boolean {
     // Retry on 503 Service Unavailable, rate limits, or other temporary errors
+    const errorMessage = error?.message?.toLowerCase() || '';
+    const errorCode = error?.code?.toLowerCase() || '';
+    const errorString = error?.toString()?.toLowerCase() || '';
+    
     return error?.status === 503 || 
            error?.status === 429 ||
-           error?.message?.includes('Service Unavailable') ||
-           error?.message?.includes('ECONNRESET') ||
-           error?.message?.includes('timeout') ||
-           error?.message?.includes('rate limit') ||
-           error?.message?.includes('Too many requests');
+           error?.status === 500 ||
+           errorMessage.includes('service unavailable') ||
+           errorMessage.includes('econnreset') ||
+           errorMessage.includes('timeout') ||
+           errorMessage.includes('rate limit') ||
+           errorMessage.includes('too many requests') ||
+           errorMessage.includes('enotfound') ||
+           errorMessage.includes('network') ||
+           errorMessage.includes('ssl') ||
+           errorMessage.includes('tls') ||
+           errorMessage.includes('bad record mac') ||
+           errorMessage.includes('connection reset') ||
+           errorMessage.includes('socket hang up') ||
+           errorString.includes('tls') ||
+           errorString.includes('ssl') ||
+           errorCode.includes('econnreset') ||
+           errorCode.includes('etimedout') ||
+           errorCode.includes('enotfound') ||
+           errorCode === 'err_ssl_wrong_version_number' ||
+           errorCode === 'eproto';
   }
 
   async generateResponse(prompt: string, options?: any): Promise<string> {
@@ -130,8 +149,12 @@ class LLMService {
   private usesFallback: boolean = false;
   
   constructor() {
-    // Get the API key from environment variables
-    const geminiApiKey = process.env.GEMINI_API_KEY || '';
+    // Get the API key from environment variables (support both formats)
+    const geminiApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+    
+    if (!geminiApiKey) {
+      console.warn('WARNING: No Gemini API key found. Set GOOGLE_GENERATIVE_AI_API_KEY in your .env file');
+    }
     
     // Initialize providers
     this.provider = new GeminiProvider(geminiApiKey);

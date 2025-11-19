@@ -76,10 +76,19 @@ export async function POST(request: Request) {
 
     await prisma.$transaction(async (tx: any) => {
       // Ensure project exists (Project.userId is required in schema)
+      // Only update updatedAt on existing projects, don't overwrite name/description
       await tx.project.upsert({
         where: { id: projectId },
-        update: { name: `Project ${projectId}`, description: 'Auto-generated project for chat data', userId },
-        create: { id: projectId, userId, name: `Project ${projectId}`, description: 'Auto-generated project for chat data' },
+        update: { 
+          // Just update timestamp to track activity, preserve name and description
+          updatedAt: new Date()
+        },
+        create: { 
+          id: projectId, 
+          userId, 
+          name: `Project ${projectId.slice(-8)}`, 
+          description: 'Created from chat session' 
+        },
       });
 
       // Create chat history row

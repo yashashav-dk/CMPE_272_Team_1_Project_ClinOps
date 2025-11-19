@@ -285,16 +285,6 @@ export function autoSaveChatData(
   tabContentGeneration?: Record<string, string>,
   delay: number = 2000
 ): void {
-  // Auto-save functionality is disabled
-  console.log('Auto-save is disabled. Chat data will not be automatically saved.');
-  
-  // Log what would have been saved for debugging purposes
-  console.log(`Would have saved chat data for project: ${projectId}, user: ${userId}, messages: ${messages?.length || 0}`);
-  
-  // Return without setting up the save timeout
-  return;
-
-  /* Original implementation kept for reference
   // Clear previous timeout
   if (saveTimeout) {
     clearTimeout(saveTimeout);
@@ -304,6 +294,7 @@ export function autoSaveChatData(
   saveTimeout = setTimeout(async () => {
     try {
       await saveChatData(projectId, userId || 'default-user', messages, projectInfo, persona, currentTab, tabContent, tabContentGeneration);
+      console.log(`Auto-saved chat data for project: ${projectId}, messages: ${messages?.length || 0}`);
     } catch (error: any) {
       // Ensure we have a string representation of the error
       const errorMessage = error?.message || (error instanceof Error ? error.toString() : 'Unknown error');
@@ -328,5 +319,4 @@ export function autoSaveChatData(
       console.error('Auto-save failed:', safeErrorDetails);
     }
   }, delay);
-  */
 } 

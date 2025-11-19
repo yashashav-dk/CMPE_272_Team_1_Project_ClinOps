@@ -43,7 +43,9 @@ export default function Sidebar({ currentUser }: SidebarProps) {
   const fetchProjects = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/projects')
+      const response = await fetch('/api/projects', {
+        credentials: 'include'
+      })
       const result = await response.json()
 
       if (result.success) {
@@ -72,6 +74,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           name: newProjectName,
           description: newProjectDescription || undefined
@@ -106,7 +109,8 @@ export default function Sidebar({ currentUser }: SidebarProps) {
 
     try {
       const response = await fetch(`/api/projects/${projectId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include'
       })
 
       const result = await response.json()
@@ -144,6 +148,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           name: editProjectName
         })
