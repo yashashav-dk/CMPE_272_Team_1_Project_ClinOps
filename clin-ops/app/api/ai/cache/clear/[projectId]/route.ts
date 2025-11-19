@@ -19,11 +19,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ proj
       success: true, 
       message: 'AI response cache cleared successfully for project' 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error clearing cache data:', error);
+    const message = error instanceof Error ? error.message : 'Failed to clear cache data';
     return NextResponse.json({ 
       success: false, 
-      error: error.message || 'Failed to clear cache data'
+      error: message
     }, { status: 500 });
   }
 }

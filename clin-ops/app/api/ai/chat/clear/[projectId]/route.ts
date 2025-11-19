@@ -24,14 +24,26 @@ export async function PUT(
       message: 'Chat data cleared successfully'
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Create safe error details for logging
-    const errorDetails = {
-      message: error?.message || (error instanceof Error ? error.toString() : 'Unknown error'),
-      type: error?.constructor?.name || typeof error,
-      code: error?.code,
-      name: error?.name
-    };
+    let message = 'Failed to clear chat data';
+    let type: string = typeof error;
+    let code: string | undefined;
+    let name: string | undefined;
+
+    if (error instanceof Error) {
+      message = error.message || message;
+      type = error.constructor.name || type;
+      name = error.name;
+    } else if (typeof error === 'object' && error !== null) {
+      const errObj = error as { message?: string; code?: string; name?: string; constructor?: { name?: string } };
+      message = errObj.message || message;
+      type = errObj.constructor?.name || type;
+      code = errObj.code;
+      name = errObj.name;
+    }
+
+    const errorDetails = { message, type, code, name };
     
     console.error('Error clearing chat data:', errorDetails);
     
@@ -39,8 +51,8 @@ export async function PUT(
     return NextResponse.json(
       { 
         success: false, 
-        error: errorDetails.message || 'Failed to clear chat data',
-        errorType: errorDetails.type
+        error: message,
+        errorType: type
       },
       { status: 500 }
     );
