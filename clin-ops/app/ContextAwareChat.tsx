@@ -32,7 +32,8 @@ type ProjectQuestion = {
 }
 
 // Enhanced markdown renderer component using react-markdown with Mermaid support
-const SimpleMarkdownRenderer: React.FC<{ content: string; projectId?: string; contextInfo?: string }> = ({ content, projectId, contextInfo }) => {
+// Wrapped with React.memo to prevent unnecessary re-renders
+const SimpleMarkdownRenderer: React.FC<{ content: string; projectId?: string; contextInfo?: string }> = React.memo(({ content, projectId, contextInfo }) => {
   if (!content || typeof content !== 'string') {
     return <p className="text-xs text-gray-500">No content available</p>;
   }
@@ -126,13 +127,31 @@ const SimpleMarkdownRenderer: React.FC<{ content: string; projectId?: string; co
 
   const contentParts = processMermaidDiagrams(content);
 
+  // Create a stable hash for diagram content to prevent unnecessary re-renders
+  const hashString = (str: string): string => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(36);
+  };
+
   return (
     <div className="markdown-content prose prose-sm dark:prose-invert max-w-none">
       {contentParts.map((part, index) => {
         if (part.type === 'mermaid') {
+          // Use content hash as key to prevent re-renders when diagram content hasn't changed
+          const diagramKey = `diagram-${hashString(part.content)}-${index}`;
           return (
-            <div key={index} className="my-4">
-              <MermaidDiagram chart={part.content} projectId={projectId} contextInfo={contextInfo} />
+            <div key={diagramKey} className="my-4">
+              <MermaidDiagram 
+                key={diagramKey}
+                chart={part.content} 
+                projectId={projectId} 
+                contextInfo={contextInfo} 
+              />
             </div>
           );
         } else {
@@ -217,7 +236,9 @@ const SimpleMarkdownRenderer: React.FC<{ content: string; projectId?: string; co
       })}
     </div>
   );
-};
+});
+
+SimpleMarkdownRenderer.displayName = 'SimpleMarkdownRenderer';
 
 export default function ContextAwareChat() {
   // Get project ID from URL parameters, generate one if not provided

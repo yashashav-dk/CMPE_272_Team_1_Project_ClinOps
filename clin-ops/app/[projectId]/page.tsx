@@ -22,6 +22,28 @@ export default function ProjectChatPage() {
           if (res.ok) {
             const u = await res.json()
             setUser(u)
+            
+            // If user is logged in, ensure project exists in database
+            if (projectId && u) {
+              try {
+                // Check if project exists, if not create it
+                const checkRes = await fetch(`/api/projects/ensure?projectId=${projectId}`, {
+                  method: 'POST',
+                  credentials: 'include',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    projectId,
+                    name: getProjectNameFromLocalStorage(projectId) || 'Untitled Project'
+                  })
+                })
+                
+                if (!checkRes.ok) {
+                  console.error('Failed to ensure project exists in database')
+                }
+              } catch (err) {
+                console.error('Error ensuring project exists:', err)
+              }
+            }
           } else {
             setUser(null)
           }
@@ -33,11 +55,26 @@ export default function ProjectChatPage() {
     return () => {
       ignore = true
     }
-  }, [])
+  }, [projectId])
+  
+  // Helper to get project name from localStorage
+  function getProjectNameFromLocalStorage(projectId: string): string | null {
+    if (typeof window === 'undefined') return null
+    try {
+      const meta = window.localStorage.getItem(`project:${projectId}:meta`)
+      if (meta) {
+        const parsed = JSON.parse(meta)
+        return parsed.name || null
+      }
+    } catch {
+      return null
+    }
+    return null
+  }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="w-full border-b">
+    <div className="h-screen flex flex-col overflow-hidden">
+      <header className="flex-none w-full border-b">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="font-semibold">ClinOps</div>
           <div className="flex items-center gap-3">
@@ -65,7 +102,7 @@ export default function ProjectChatPage() {
           </div>
         </div>
       </header>
-      <main className="flex-1">
+      <main className="flex-1 min-h-0 overflow-hidden">
         <div className="h-full">
           <ContextAwareChat key={projectId} />
         </div>
