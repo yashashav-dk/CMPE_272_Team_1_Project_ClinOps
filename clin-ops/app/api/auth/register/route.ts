@@ -7,7 +7,8 @@ import { signAuthToken } from "@/lib/jwt";
 const bodySchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  name: z.string().min(1).optional(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
 });
 
 export async function POST(req: Request) {
@@ -16,7 +17,7 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
-  const { email, password, name } = parsed.data;
+  const { email, password, firstName, lastName } = parsed.data;
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -25,8 +26,10 @@ export async function POST(req: Request) {
 
   const passwordHash = await hashPassword(password);
 
+  const fullName = `${firstName} ${lastName}`.trim();
+
   const user = await prisma.user.create({
-    data: { email, name, passwordHash },
+    data: { email, name: fullName, passwordHash },
     select: { id: true, email: true, name: true, createdAt: true },
   });
 

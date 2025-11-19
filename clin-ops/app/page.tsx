@@ -11,7 +11,8 @@ type AuthFormProps = { mode: 'login' | 'register'; onSuccess: (u: User) => void 
 function AuthForm({ mode, onSuccess }: AuthFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -20,7 +21,10 @@ function AuthForm({ mode, onSuccess }: AuthFormProps) {
     setLoading(true)
     setError(null)
     const body: any = { email, password }
-    if (mode === 'register') body.name = name
+    if (mode === 'register') {
+      body.firstName = firstName
+      body.lastName = lastName
+    }
     const res = await fetch(`/api/auth/${mode === 'register' ? 'register' : 'login'}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -58,13 +62,24 @@ function AuthForm({ mode, onSuccess }: AuthFormProps) {
         minLength={8}
       />
       {mode === 'register' && (
-        <input
-          type="text"
-          placeholder="Name (optional)"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="border rounded px-3 py-2"
-        />
+        <>
+          <input
+            type="text"
+            placeholder="First Name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            className="border rounded px-3 py-2"
+            required
+          />
+          <input
+            type="text"
+            placeholder="Last Name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            className="border rounded px-3 py-2"
+            required
+          />
+        </>
       )}
       {error && (
         <div className="text-red-600 text-sm">{error}</div>
