@@ -1,5 +1,4 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import ContextAwareChat from '@/app/ContextAwareChat'
@@ -36,27 +35,44 @@ export default function ProjectChatPage() {
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="w-full border-b">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="font-semibold">ClinOps</div>
+    <div className="h-screen flex flex-col bg-gray-950 text-gray-100">
+      <header className="flex-shrink-0 w-full border-b border-gray-800 bg-gray-950/80 backdrop-blur">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="h-9 w-9 rounded-lg bg-indigo-600 flex items-center justify-center text-xs font-semibold tracking-tight">
+              CO
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-white truncate">
+                ClinOps Project Workspace
+              </div>
+              <div className="text-xs text-gray-400 truncate">
+                Project ID: <span className="font-mono text-[11px]">{projectId}</span>
+              </div>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             {user ? (
               <>
-                <span className="text-sm text-gray-700">{user.email}</span>
+                <div className="text-right hidden sm:block">
+                  <div className="text-xs text-gray-400">Signed in as</div>
+                  <div className="text-sm font-medium text-white truncate max-w-[200px]">
+                    {user.email}
+                  </div>
+                </div>
                 <LogoutButton />
               </>
             ) : (
               <>
                 <button
                   onClick={() => router.push('/?auth=login')}
-                  className="border rounded px-3 py-1 text-sm"
+                  className="px-3 py-1.5 text-xs sm:text-sm rounded-md border border-gray-700 text-gray-100 hover:bg-gray-800 transition-colors"
                 >
                   Login
                 </button>
                 <button
                   onClick={() => router.push('/?auth=register')}
-                  className="border rounded px-3 py-1 text-sm"
+                  className="px-3 py-1.5 text-xs sm:text-sm rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm transition-colors"
                 >
                   Sign up
                 </button>
@@ -65,10 +81,8 @@ export default function ProjectChatPage() {
           </div>
         </div>
       </header>
-      <main className="flex-1">
-        <div className="h-full">
-          <ContextAwareChat key={projectId} />
-        </div>
+      <main className="flex-1 overflow-hidden">
+        <ContextAwareChat key={projectId} />
       </main>
     </div>
   )

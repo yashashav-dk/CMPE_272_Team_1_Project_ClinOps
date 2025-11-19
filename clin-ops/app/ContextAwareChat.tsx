@@ -1,7 +1,7 @@
 
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { HiPaperAirplane } from 'react-icons/hi2'
 import { HiCheckCircle, HiQuestionMarkCircle, HiRefresh, HiOutlineTrash, HiViewGrid } from 'react-icons/hi'
@@ -263,6 +263,9 @@ export default function ContextAwareChat() {
   const [feedbackMessage, setFeedbackMessage] = useState('')
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+  
+  // Ref for auto-scrolling messages
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   
   // Change request state
   const [changeRequest, setChangeRequest] = useState('')
@@ -551,6 +554,11 @@ export default function ContextAwareChat() {
       );
     }
   }, [messages, projectQuestions, currentPersona, currentTab, projectId, isDataLoaded, tabContent, tabContentGeneration]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // Manual save function for immediate saves
   const saveDataNow = async () => {
@@ -1602,14 +1610,19 @@ Please provide the updated content that addresses the change request while maint
     )
   }
 
+  const sharedTabBase = 'px-3.5 py-2 text-sm font-semibold rounded-lg transition-all duration-300 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400';
+  const activeTabClasses = 'bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 text-white shadow-xl border border-indigo-400/60 ';
+  const inactiveTabClasses = 'text-gray-300 border border-transparent hover:text-white hover:bg-gray-800/70 hover:border-gray-700 hover:-translate-y-0.5';
+  const getTabClasses = (tab: TabType) => `${sharedTabBase} ${currentTab === tab ? activeTabClasses : inactiveTabClasses}`;
+
   return (
     <div className="ai-chat-container flex h-full flex-col">
       {/* Top Section - Tabs and Persona Selection */}
-      <div className="flex-none p-2 bg-white dark:bg-gray-900 border-b dark:border-gray-700 flex justify-between items-center">
-        <div className="flex overflow-x-auto">
+      <div className="flex-none p-2 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center">
+        <div className="flex overflow-x-auto gap-1 text-sm">
           {/* General Tab (always present) */}
           <button 
-            className={`px-2 py-1 text-xs ${currentTab === 'general' ? 'border-b-2 border-indigo-500 text-indigo-500' : 'text-gray-600 dark:text-gray-400'}`}
+            className={getTabClasses('general')}
             onClick={() => setCurrentTab('general')}
           >
             General
@@ -1619,31 +1632,31 @@ Please provide the updated content that addresses the change request while maint
             /* Trial Coordinator Tabs */
             <>
               <button
-                className={`px-2 py-1 text-xs ${currentTab === 'trialOverview' ? 'border-b-2 border-indigo-500 text-indigo-500' : 'text-gray-600 dark:text-gray-400'}`}
+                className={getTabClasses('trialOverview')}
                 onClick={() => setCurrentTab('trialOverview')}
               >
                 Trial Overview
               </button>
               <button
-                className={`px-2 py-1 text-xs ${currentTab === 'taskChecklists' ? 'border-b-2 border-indigo-500 text-indigo-500' : 'text-gray-600 dark:text-gray-400'}`}
+                className={getTabClasses('taskChecklists')}
                 onClick={() => setCurrentTab('taskChecklists')}
               >
                 Task Checklists
               </button>
               <button
-                className={`px-2 py-1 text-xs ${currentTab === 'teamWorkflows' ? 'border-b-2 border-indigo-500 text-indigo-500' : 'text-gray-600 dark:text-gray-400'}`}
+                className={getTabClasses('teamWorkflows')}
                 onClick={() => setCurrentTab('teamWorkflows')}
               >
                 Team Workflows
               </button>
               <button
-                className={`px-2 py-1 text-xs ${currentTab === 'trialTimeline' ? 'border-b-2 border-indigo-500 text-indigo-500' : 'text-gray-600 dark:text-gray-400'}`}
+                className={getTabClasses('trialTimeline')}
                 onClick={() => setCurrentTab('trialTimeline')}
               >
                 Trial Timeline
               </button>
               <button
-                className={`px-2 py-1 text-xs ${currentTab === 'qualityMetrics' ? 'border-b-2 border-indigo-500 text-indigo-500' : 'text-gray-600 dark:text-gray-400'}`}
+                className={getTabClasses('qualityMetrics')}
                 onClick={() => setCurrentTab('qualityMetrics')}
               >
                 Quality Metrics
@@ -1653,37 +1666,37 @@ Please provide the updated content that addresses the change request while maint
             /* Regulatory Advisor Tabs */
             <>
               <button
-                className={`px-2 py-1 text-xs ${currentTab === 'protocolRequirements' ? 'border-b-2 border-indigo-500 text-indigo-500' : 'text-gray-600 dark:text-gray-400'}`}
+                className={getTabClasses('protocolRequirements')}
                 onClick={() => setCurrentTab('protocolRequirements')}
               >
                 Protocol Requirements
               </button>
               <button
-                className={`px-2 py-1 text-xs ${currentTab === 'documentControl' ? 'border-b-2 border-indigo-500 text-indigo-500' : 'text-gray-600 dark:text-gray-400'}`}
+                className={getTabClasses('documentControl')}
                 onClick={() => setCurrentTab('documentControl')}
               >
                 Document Control
               </button>
               <button
-                className={`px-2 py-1 text-xs ${currentTab === 'complianceDiagrams' ? 'border-b-2 border-indigo-500 text-indigo-500' : 'text-gray-600 dark:text-gray-400'}`}
+                className={getTabClasses('complianceDiagrams')}
                 onClick={() => setCurrentTab('complianceDiagrams')}
               >
                 Compliance Diagrams
               </button>
               <button
-                className={`px-2 py-1 text-xs ${currentTab === 'riskControls' ? 'border-b-2 border-indigo-500 text-indigo-500' : 'text-gray-600 dark:text-gray-400'}`}
+                className={getTabClasses('riskControls')}
                 onClick={() => setCurrentTab('riskControls')}
               >
                 Risk & Controls
               </button>
               <button
-                className={`px-2 py-1 text-xs ${currentTab === 'auditPreparation' ? 'border-b-2 border-indigo-500 text-indigo-500' : 'text-gray-600 dark:text-gray-400'}`}
+                className={getTabClasses('auditPreparation')}
                 onClick={() => setCurrentTab('auditPreparation')}
               >
                 Audit Preparation
               </button>
               <button
-                className={`px-2 py-1 text-xs ${currentTab === 'smartAlerts' ? 'border-b-2 border-indigo-500 text-indigo-500' : 'text-gray-600 dark:text-gray-400'}`}
+                className={getTabClasses('smartAlerts')}
                 onClick={() => setCurrentTab('smartAlerts')}
               >
                 Smart Alerts
@@ -1692,23 +1705,23 @@ Please provide the updated content that addresses the change request while maint
           )}
         </div>
         
-        <div className="flex items-center gap-2">
-          <div className="border rounded overflow-hidden text-xs">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center bg-gray-900/60 border border-gray-700 rounded-full p-1 shadow-lg text-xs">
             <button
-              className={`px-2 py-1 ${
+              className={`px-3 py-1.5 rounded-full font-semibold transition-all duration-200 ${
               currentPersona === 'trialCoordinator'
-                ? 'bg-indigo-500 text-white'
-                : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                ? 'bg-indigo-500 text-white shadow-md ring-1 ring-indigo-400'
+                : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
             }`}
             onClick={() => changePersona('trialCoordinator')}
           >
             Trial Coordinator
           </button>
             <button
-              className={`px-2 py-1 ${
+              className={`px-3 py-1.5 rounded-full font-semibold transition-all duration-200 ${
               currentPersona === 'regulatoryAdvisor'
-                ? 'bg-indigo-500 text-white'
-                : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                ? 'bg-indigo-500 text-white shadow-md ring-1 ring-indigo-400'
+                : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
             }`}
               onClick={() => changePersona('regulatoryAdvisor')}
             >
@@ -1716,7 +1729,7 @@ Please provide the updated content that addresses the change request while maint
             </button>
           </div>
           <button
-            className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="px-3 py-1.5 text-xs font-semibold rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-lg hover:shadow-purple-500/40 transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-400"
             onClick={() => {
               setIsFeedbackOpen(true)
               setFeedbackSubmitted(false)
@@ -1776,6 +1789,7 @@ Please provide the updated content that addresses the change request while maint
                 </div>
               </div>
             ))}
+            <div ref={messagesEndRef} />
             {isLoading && (
               <div className="flex justify-start mb-3">
                 <div className="inline-block p-2 rounded-lg bg-gray-200 dark:bg-gray-700 dark:text-white">
