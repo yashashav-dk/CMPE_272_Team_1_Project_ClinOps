@@ -6,6 +6,12 @@ import ReactMarkdown from 'react-markdown'
 import InteractiveTimeline from './InteractiveTimeline'
 import InteractiveWorkflow from './InteractiveWorkflow'
 import InteractiveChecklist from './InteractiveChecklist'
+import InteractiveTable from './InteractiveTable'
+import EnhancedInteractiveChecklist from './EnhancedInteractiveChecklist'
+import EnhancedMermaidViewer from './EnhancedMermaidViewer'
+import ChartWidget from './ChartWidget'
+import EnhancedKPICard from './EnhancedKPICard'
+import AdvancedTable from './AdvancedTable'
 
 interface WidgetProps {
   widget: {
@@ -26,95 +32,36 @@ export default function WidgetRenderer({ widget, onDelete }: WidgetProps) {
       case 'diagram':
         return (
           <div className="w-full">
-            <MermaidDiagram
+            <EnhancedMermaidViewer
               chart={widget.content.diagramCode}
               projectId={widget.projectId}
               contextInfo={widget.tabType}
+              title={widget.title}
             />
           </div>
         )
 
       case 'kpi':
-        const percentage = widget.content.target
-          ? Math.round((widget.content.value / widget.content.target) * 100)
-          : null
-
         return (
-          <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-lg p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {widget.title}
-              </h4>
-              {widget.content.status && (
-                <span
-                  className={`px-2 py-1 text-xs rounded-full ${
-                    widget.content.status === 'on-track'
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                  }`}
-                >
-                  {widget.content.status}
-                </span>
-              )}
-            </div>
-            <div className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-              {widget.content.value}
-              {widget.content.unit === '%' && '%'}
-              {widget.content.target && (
-                <span className="text-lg text-gray-500 dark:text-gray-400 ml-2">
-                  / {widget.content.target}
-                </span>
-              )}
-            </div>
-            {percentage !== null && (
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full ${
-                    percentage >= 100
-                      ? 'bg-green-500'
-                      : percentage >= 70
-                      ? 'bg-blue-500'
-                      : 'bg-yellow-500'
-                  }`}
-                  style={{ width: `${Math.min(percentage, 100)}%` }}
-                ></div>
-              </div>
-            )}
-          </div>
+          <EnhancedKPICard
+            kpi={widget.content}
+            title={widget.title}
+          />
         )
 
       case 'table':
         return (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-800">
-                <tr>
-                  {widget.content.headers.map((header: string, idx: number) => (
-                    <th
-                      key={idx}
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                    >
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                {widget.content.data.map((row: any, rowIdx: number) => (
-                  <tr key={rowIdx}>
-                    {widget.content.headers.map((header: string, cellIdx: number) => (
-                      <td
-                        key={cellIdx}
-                        className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300"
-                      >
-                        {row[header]}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <AdvancedTable
+            data={widget.content.data || widget.content.rows || []}
+            headers={widget.content.headers}
+            widgetId={widget.id}
+            projectId={widget.projectId}
+            title={widget.title}
+            enableSearch={true}
+            enablePagination={true}
+            enableExport={true}
+            enableColumnVisibility={true}
+          />
         )
 
       case 'timeline':
@@ -129,9 +76,11 @@ export default function WidgetRenderer({ widget, onDelete }: WidgetProps) {
 
       case 'list':
         return (
-          <InteractiveChecklist 
+          <EnhancedInteractiveChecklist 
             items={widget.content.items} 
             listType={widget.content.listType}
+            widgetId={widget.id}
+            projectId={widget.projectId}
           />
         )
 
@@ -140,6 +89,18 @@ export default function WidgetRenderer({ widget, onDelete }: WidgetProps) {
           <div className="prose prose-sm dark:prose-invert max-w-none">
             <ReactMarkdown>{widget.content.markdown}</ReactMarkdown>
           </div>
+        )
+
+      case 'chart':
+        return (
+          <ChartWidget
+            type={widget.content.chartType}
+            data={widget.content.data}
+            xAxisKey={widget.content.xAxisKey}
+            yAxisKeys={widget.content.yAxisKeys}
+            title={widget.content.description}
+            colors={widget.content.colors}
+          />
         )
 
       default:

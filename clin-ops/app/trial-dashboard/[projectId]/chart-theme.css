@@ -1,0 +1,73 @@
+/* Chart theming for dark mode support */
+
+:root {
+  --tooltip-bg: #ffffff;
+  --tooltip-border: #e5e7eb;
+  --chart-text: #374151;
+  --chart-grid: #e5e7eb;
+}
+
+.dark {
+  --tooltip-bg: #1f2937;
+  --tooltip-border: #374151;
+  --chart-text: #d1d5db;
+  --chart-grid: #374151;
+}
+
+/* Recharts tooltip styling */
+.recharts-tooltip-wrapper {
+  outline: none;
+}
+
+.recharts-default-tooltip {
+  background-color: var(--tooltip-bg) !important;
+  border: 1px solid var(--tooltip-border) !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+}
+
+.recharts-tooltip-label {
+  color: var(--chart-text) !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.recharts-tooltip-item {
+  color: var(--chart-text) !important;
+}
+
+/* Recharts legend styling */
+.recharts-legend-wrapper {
+  padding-top: 1rem !important;
+}
+
+.recharts-legend-item-text {
+  color: var(--chart-text) !important;
+}
+
+/* Grid lines */
+.recharts-cartesian-grid line {
+  stroke: var(--chart-grid) !important;
+}
+
+/* Axis text */
+.recharts-xAxis text,
+.recharts-yAxis text {
+  fill: var(--chart-text) !important;
+}
+
+/* Responsive container */
+.recharts-responsive-container {
+  font-family: inherit;
+}
+
+/* Pie chart label lines */
+.recharts-pie-label-line {
+  stroke: var(--chart-text) !important;
+}
+
+.recharts-pie-label-text {
+  fill: var(--chart-text) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+}

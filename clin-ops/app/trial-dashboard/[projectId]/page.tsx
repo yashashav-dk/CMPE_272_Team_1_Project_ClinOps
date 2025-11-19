@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import WidgetRenderer from './components/WidgetRenderer'
 import { HiRefresh, HiOutlineTrash, HiOutlineThumbUp, HiOutlineThumbDown } from 'react-icons/hi'
 import LogoutButton from '@/app/components/LogoutButton'
+import './chart-theme.css'
 
 interface DashboardWidget {
   id: string
