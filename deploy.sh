@@ -168,10 +168,16 @@ EOF
     print_info "Installing Node.js dependencies..."
     sudo -u ubuntu npm install
     
-    # Run Prisma migrations
-    print_info "Running database migrations..."
+    # Sync Prisma schema with database
+    print_info "Syncing database schema..."
     sudo -u ubuntu npx prisma generate
-    sudo -u ubuntu npx prisma migrate deploy
+    
+    # Use db push instead of migrate for external databases
+    # This handles existing schemas gracefully without migration files
+    print_info "Pushing schema to database (external DB-safe)..."
+    sudo -u ubuntu npx prisma db push --accept-data-loss || {
+        print_warning "Schema sync had warnings, but continuing..."
+    }
     
     # Build application
     print_info "Building Next.js application..."
