@@ -1725,11 +1725,11 @@ Please provide the updated content that addresses the change request while maint
       </div>
       
       {/* Main Content - Split into two sections horizontally */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Left Panel - Chat */}
-        <div className="w-2/5 flex flex-col h-full bg-white dark:bg-gray-900">
+        <div className="w-2/5 flex flex-col bg-white dark:bg-gray-900 border-r dark:border-gray-700">
           {/* Context awareness indicator with refresh button */}
-          <div className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-xs text-blue-600 dark:text-blue-300 border-b flex justify-between items-center">
+          <div className="flex-none px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-xs text-blue-600 dark:text-blue-300 border-b flex justify-between items-center">
             <span>
               <span className="font-semibold">Persistent Chat:</span> {isDataLoaded ? 'Messages auto-saved' : 'Loading...'} | {conversationHistory.length > 1 ? `Context: ${Math.min(conversationHistory.length, MAX_CONTEXT_LENGTH)} messages` : 'No chat history'}
             </span>
@@ -1755,11 +1755,11 @@ Please provide the updated content that addresses the change request while maint
             </div>
           </div>
           
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-3 text-sm">
+          {/* Messages - Scrollable container with fixed height */}
+          <div className="flex-1 overflow-y-auto p-3 text-sm min-h-0">
             {messages.map((message, index) => (
               <div key={index} className={`mb-3 ${message.sender === 'user' ? 'text-right' : ''}`}>
-                <div className={`inline-block p-2 rounded-lg ${
+                <div className={`inline-block p-2 rounded-lg max-w-[85%] break-words ${
                   message.sender === 'user' 
                     ? 'bg-indigo-500 text-white' 
                     : 'bg-gray-200 dark:bg-gray-700 dark:text-white'
@@ -1769,7 +1769,7 @@ Please provide the updated content that addresses the change request while maint
                       {message.persona === 'regulatoryAdvisor' ? 'Regulatory Advisor' : 'Trial Coordinator'}
                     </div>
                   )}
-                  <div className="text-xs">{message.text}</div>
+                  <div className="text-xs whitespace-pre-wrap">{message.text}</div>
                 </div>
               </div>
             ))}
@@ -1786,20 +1786,20 @@ Please provide the updated content that addresses the change request while maint
             )}
           </div>
           
-          {/* Input */}
-          <div className="flex-none p-2 border-t dark:border-gray-700">
-            <div className="flex">
+          {/* Input - Fixed at bottom */}
+          <div className="flex-none p-2 border-t dark:border-gray-700 bg-white dark:bg-gray-900">
+            <div className="flex gap-2">
               <input
                 type="text"
-                className="flex-1 border dark:border-gray-600 rounded-l px-2 py-2 dark:bg-gray-800 dark:text-white text-sm min-h-[40px]"
+                className="flex-1 border dark:border-gray-600 rounded-l px-3 py-2 dark:bg-gray-800 dark:text-white text-sm h-10"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={isLoading ? "AI is thinking..." : currentTab === 'general' && !projectQuestions[currentQuestionIndex]?.answered ? `Answer: ${projectQuestions[currentQuestionIndex]?.question}` : "Type your message here..."}
+                placeholder={isLoading ? "AI is thinking..." : currentTab === 'general' && showQuestionPrompt ? "Type your answer here..." : "Type your message here..."}
                 disabled={isLoading}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               />
               <button
-                className={`${isLoading ? 'bg-gray-400' : 'bg-indigo-500 hover:bg-indigo-600'} text-white px-3 py-2 rounded-r`}
+                className={`${isLoading ? 'bg-gray-400' : 'bg-indigo-500 hover:bg-indigo-600'} text-white px-4 rounded-r h-10 flex items-center justify-center`}
                 onClick={handleSendMessage}
                 disabled={isLoading}
               >
