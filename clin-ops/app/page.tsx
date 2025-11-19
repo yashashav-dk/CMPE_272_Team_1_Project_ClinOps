@@ -516,7 +516,6 @@ export default function Home() {
               ))}
             </div>
           </div>
-/*
           {/* Call to Action Section 
           <div className="mt-32 bg-gradient-to-br from-indigo-900/60 to-purple-900/60 rounded-3xl p-12 border border-indigo-500/30 relative overflow-hidden">
             <div className="absolute inset-0 opacity-10">
