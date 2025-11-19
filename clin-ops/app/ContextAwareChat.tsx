@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation'
 import { HiPaperAirplane } from 'react-icons/hi2'
 import { HiCheckCircle, HiQuestionMarkCircle, HiRefresh, HiOutlineTrash, HiViewGrid, HiOutlineThumbUp, HiOutlineThumbDown } from 'react-icons/hi'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import MermaidDiagram from './MermaidDiagram'
 import './style.css'
 import { generateAIResponse } from '@/services/ai-client'
@@ -138,6 +139,7 @@ const SimpleMarkdownRenderer: React.FC<{ content: string; projectId?: string; co
           return (
             <ReactMarkdown
               key={index}
+              remarkPlugins={[remarkGfm]}
               components={{
                 // Custom styling for different elements
                 h1: ({ children }) => (
