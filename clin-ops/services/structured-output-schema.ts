@@ -14,6 +14,7 @@ export interface StructuredDashboardResponse {
     | KPIWidget
     | TableWidget
     | TimelineWidget
+    | WorkflowWidget
     | ListWidget
     | TextWidget
   >
@@ -21,7 +22,7 @@ export interface StructuredDashboardResponse {
 
 export interface BaseWidget {
   id: string
-  type: 'diagram' | 'kpi' | 'table' | 'timeline' | 'list' | 'text'
+  type: 'diagram' | 'kpi' | 'table' | 'timeline' | 'workflow' | 'list' | 'text'
   title: string
   order: number
 }
@@ -65,6 +66,20 @@ export interface TimelineWidget extends BaseWidget {
       status: 'completed' | 'in-progress' | 'upcoming' | 'delayed'
       description?: string
       dependencies?: string[]
+    }>
+  }
+}
+
+export interface WorkflowWidget extends BaseWidget {
+  type: 'workflow'
+  content: {
+    steps: Array<{
+      name: string
+      status: 'completed' | 'active' | 'pending' | 'blocked'
+      description?: string
+      assignee?: string
+      dueDate?: string
+      blockedReason?: string
     }>
   }
 }
@@ -116,6 +131,9 @@ export function validateStructuredResponse(data: any): data is StructuredDashboa
         break
       case 'timeline':
         if (!Array.isArray(widget.content?.milestones)) return false
+        break
+      case 'workflow':
+        if (!Array.isArray(widget.content?.steps)) return false
         break
       case 'list':
         if (!Array.isArray(widget.content?.items)) return false
@@ -202,13 +220,45 @@ IMPORTANT: You MUST return your response as valid JSON following this exact stru
     },
     {
       "id": "unique-id-5",
-      "type": "list",
-      "title": "Pre-Study Checklist",
+      "type": "workflow",
+      "title": "Study Startup Process",
       "order": 4,
       "content": {
+        "steps": [
+          {
+            "name": "Protocol Development",
+            "status": "completed",
+            "description": "Finalize protocol and synopsis",
+            "assignee": "Dr. Smith",
+            "dueDate": "2025-01-15"
+          },
+          {
+            "name": "IRB Submission",
+            "status": "active",
+            "description": "Submit to institutional review board",
+            "assignee": "Regulatory Team",
+            "dueDate": "2025-02-01"
+          },
+          {
+            "name": "Site Initiation",
+            "status": "pending",
+            "description": "Site training and activation",
+            "assignee": "CRA Team",
+            "dueDate": "2025-03-01"
+          }
+        ]
+      }
+    },
+    {
+      "id": "unique-id-6",
+      "type": "list",
+      "title": "Pre-Study Checklist",
+      "order": 5,
+      "content": {
         "items": [
-          {"text": "IRB submission prepared", "checked": true, "priority": "high"},
-          {"text": "Site contracts executed", "checked": false, "priority": "high"}
+          {"text": "IRB submission prepared", "checked": true, "priority": "high", "category": "Regulatory"},
+          {"text": "Site contracts executed", "checked": false, "priority": "high", "category": "Legal"},
+          {"text": "CRF finalized", "checked": true, "priority": "medium", "category": "Data Management"}
         ],
         "listType": "checklist"
       }
@@ -218,7 +268,7 @@ IMPORTANT: You MUST return your response as valid JSON following this exact stru
 
 RULES:
 1. Return ONLY valid JSON - no markdown, no code blocks, no explanatory text
-2. Include multiple widgets (diagrams, KPIs, tables, timelines, lists) to create a comprehensive dashboard
+2. Include multiple widgets (diagrams, KPIs, tables, timelines, workflows, lists) to create a comprehensive dashboard
 3. Use real data from the project information provided
 4. Ensure all Mermaid diagram syntax is properly escaped (use \\n for newlines in JSON strings)
 5. Make KPI values realistic based on project timeline and scope

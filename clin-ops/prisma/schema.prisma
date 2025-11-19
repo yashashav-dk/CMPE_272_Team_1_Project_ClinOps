@@ -156,3 +156,15 @@ model DashboardWidget {
   @@index([userId], map: "idx_dashboard_widgets_user_id")
   @@map("dashboard_widgets")
 }
+
+model Feedback {
+  id        String   @id @default(uuid())
+  projectId String?  @map("project_id")
+  userId    String?  @map("user_id")
+  persona   String?
+  tabType   String?  @map("tab_type")
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([projectId], map: "idx_feedback_project_id")
+}

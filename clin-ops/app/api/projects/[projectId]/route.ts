@@ -23,6 +23,14 @@ export async function GET(
     const project = await prisma.project.findUnique({
       where: {
         id: projectId
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+        userId: true
       }
     })
 
@@ -74,7 +82,15 @@ export async function PATCH(
 
     // Verify project exists and user owns it
     const existingProject = await prisma.project.findUnique({
-      where: { id: projectId }
+      where: { id: projectId },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+        userId: true
+      }
     })
 
     if (!existingProject) {
@@ -96,7 +112,9 @@ export async function PATCH(
       where: { id: projectId },
       data: {
         ...(name && { name: name.trim() }),
-        ...(description !== undefined && { description: description?.trim() || null })
+        ...(description !== undefined && {
+          description: description?.trim() || null
+        })
       }
     })
 

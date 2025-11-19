@@ -73,16 +73,8 @@ export async function POST(request: Request) {
       // Ensure project exists (Project.userId is required in schema)
       await tx.project.upsert({
         where: { id: projectId },
-        update: {
-          name: `Project ${projectId}`,
-          description: 'Auto-generated project for chat data',
-        },
-        create: {
-          id: projectId,
-          userId,
-          name: `Project ${projectId}`,
-          description: 'Auto-generated project for chat data',
-        },
+        update: { name: `Project ${projectId}`, description: 'Auto-generated project for chat data', userId },
+        create: { id: projectId, userId, name: `Project ${projectId}`, description: 'Auto-generated project for chat data' },
       });
 
       // Create chat history row

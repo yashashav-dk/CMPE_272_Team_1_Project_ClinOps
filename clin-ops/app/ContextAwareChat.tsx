@@ -258,6 +258,10 @@ export default function ContextAwareChat() {
   const [isDataLoaded, setIsDataLoaded] = useState(false)
   const [tabsSentToDashboard, setTabsSentToDashboard] = useState<Set<string>>(new Set())
   const [isSendingToDashboard, setIsSendingToDashboard] = useState(false)
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
+  const [feedbackMessage, setFeedbackMessage] = useState('')
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
   
   // Change request state
   const [changeRequest, setChangeRequest] = useState('')
@@ -654,6 +658,37 @@ export default function ContextAwareChat() {
       } else {
         setCurrentTab('protocolRequirements');
       }
+    }
+  }
+
+  const handleSubmitFeedback = async () => {
+    if (!feedbackMessage.trim()) return
+    try {
+      setIsSubmittingFeedback(true)
+      setFeedbackSubmitted(false)
+      await fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: feedbackMessage.trim(),
+          persona: currentPersona,
+          tabType: currentTab,
+          projectId,
+          userId: 'default-user',
+        }),
+      })
+      setFeedbackSubmitted(true)
+      setFeedbackMessage('')
+      setTimeout(() => {
+        setIsFeedbackOpen(false)
+        setFeedbackSubmitted(false)
+      }, 1200)
+    } catch (error) {
+      console.error('Error submitting feedback:', error)
+    } finally {
+      setIsSubmittingFeedback(false)
     }
   }
 
@@ -1656,9 +1691,10 @@ Please provide the updated content that addresses the change request while maint
           )}
         </div>
         
-        <div className="border rounded overflow-hidden text-xs">
-          <button
-            className={`px-2 py-1 ${
+        <div className="flex items-center gap-2">
+          <div className="border rounded overflow-hidden text-xs">
+            <button
+              className={`px-2 py-1 ${
               currentPersona === 'trialCoordinator'
                 ? 'bg-indigo-500 text-white'
                 : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300'
@@ -1667,25 +1703,35 @@ Please provide the updated content that addresses the change request while maint
           >
             Trial Coordinator
           </button>
-          <button
-            className={`px-2 py-1 ${
+            <button
+              className={`px-2 py-1 ${
               currentPersona === 'regulatoryAdvisor'
                 ? 'bg-indigo-500 text-white'
                 : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300'
             }`}
-            onClick={() => changePersona('regulatoryAdvisor')}
+              onClick={() => changePersona('regulatoryAdvisor')}
+            >
+              Regulatory Advisor
+            </button>
+          </div>
+          <button
+            className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+            onClick={() => {
+              setIsFeedbackOpen(true)
+              setFeedbackSubmitted(false)
+            }}
           >
-            Regulatory Advisor
+            Feedback
           </button>
         </div>
       </div>
       
       {/* Main Content - Split into two sections horizontally */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Left Panel - Chat */}
-        <div className="w-2/5 flex flex-col h-full bg-white dark:bg-gray-900">
+        <div className="w-2/5 flex flex-col bg-white dark:bg-gray-900 border-r dark:border-gray-700">
           {/* Context awareness indicator with refresh button */}
-          <div className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-xs text-blue-600 dark:text-blue-300 border-b flex justify-between items-center">
+          <div className="flex-none px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-xs text-blue-600 dark:text-blue-300 border-b flex justify-between items-center">
             <span>
               <span className="font-semibold">Persistent Chat:</span> {isDataLoaded ? 'Messages auto-saved' : 'Loading...'} | {conversationHistory.length > 1 ? `Context: ${Math.min(conversationHistory.length, MAX_CONTEXT_LENGTH)} messages` : 'No chat history'}
             </span>
@@ -1711,11 +1757,11 @@ Please provide the updated content that addresses the change request while maint
             </div>
           </div>
           
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-3 text-sm">
+          {/* Messages - Scrollable container with fixed height */}
+          <div className="flex-1 overflow-y-auto p-3 text-sm min-h-0">
             {messages.map((message, index) => (
               <div key={index} className={`mb-3 ${message.sender === 'user' ? 'text-right' : ''}`}>
-                <div className={`inline-block p-2 rounded-lg ${
+                <div className={`inline-block p-2 rounded-lg max-w-[85%] break-words ${
                   message.sender === 'user' 
                     ? 'bg-indigo-500 text-white' 
                     : 'bg-gray-200 dark:bg-gray-700 dark:text-white'
@@ -1725,7 +1771,7 @@ Please provide the updated content that addresses the change request while maint
                       {message.persona === 'regulatoryAdvisor' ? 'Regulatory Advisor' : 'Trial Coordinator'}
                     </div>
                   )}
-                  <div className="text-xs">{message.text}</div>
+                  <div className="text-xs whitespace-pre-wrap">{message.text}</div>
                 </div>
               </div>
             ))}
@@ -1742,20 +1788,20 @@ Please provide the updated content that addresses the change request while maint
             )}
           </div>
           
-          {/* Input */}
-          <div className="flex-none p-2 border-t dark:border-gray-700">
-            <div className="flex">
+          {/* Input - Fixed at bottom */}
+          <div className="flex-none p-2 border-t dark:border-gray-700 bg-white dark:bg-gray-900">
+            <div className="flex gap-2">
               <input
                 type="text"
-                className="flex-1 border dark:border-gray-600 rounded-l px-2 py-2 dark:bg-gray-800 dark:text-white text-sm min-h-[40px]"
+                className="flex-1 border dark:border-gray-600 rounded-l px-3 py-2 dark:bg-gray-800 dark:text-white text-sm h-10"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={isLoading ? "AI is thinking..." : currentTab === 'general' && !projectQuestions[currentQuestionIndex]?.answered ? `Answer: ${projectQuestions[currentQuestionIndex]?.question}` : "Type your message here..."}
+                placeholder={isLoading ? "AI is thinking..." : currentTab === 'general' && showQuestionPrompt ? "Type your answer here..." : "Type your message here..."}
                 disabled={isLoading}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               />
               <button
-                className={`${isLoading ? 'bg-gray-400' : 'bg-indigo-500 hover:bg-indigo-600'} text-white px-3 py-2 rounded-r`}
+                className={`${isLoading ? 'bg-gray-400' : 'bg-indigo-500 hover:bg-indigo-600'} text-white px-4 rounded-r h-10 flex items-center justify-center`}
                 onClick={handleSendMessage}
                 disabled={isLoading}
               >
@@ -1769,6 +1815,54 @@ Please provide the updated content that addresses the change request while maint
         <div className="w-3/5 flex-1 bg-gray-50 dark:bg-gray-800 relative">
           {/* Tab Content */}
           {renderTabContent()}
+
+          {isFeedbackOpen && (
+            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center z-20">
+              <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-4 w-full max-w-sm text-xs">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="font-semibold text-gray-800 dark:text-gray-100">Share Feedback</h3>
+                  <button
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    onClick={() => setIsFeedbackOpen(false)}
+                    disabled={isSubmittingFeedback}
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p className="mb-2 text-gray-600 dark:text-gray-300">
+                  Help us improve the {currentPersona === 'regulatoryAdvisor' ? 'Regulatory Advisor' : 'Trial Coordinator'} on the "{getTabDisplayName(currentPersona, currentTab)}" view.
+                </p>
+                <textarea
+                  className="w-full h-24 text-xs border border-gray-300 dark:border-gray-600 rounded p-2 mb-2 dark:bg-gray-800 dark:text-white"
+                  placeholder="What worked well? What could be better?"
+                  value={feedbackMessage}
+                  onChange={(e) => setFeedbackMessage(e.target.value)}
+                  disabled={isSubmittingFeedback}
+                />
+                {feedbackSubmitted && (
+                  <div className="mb-2 text-green-600 dark:text-green-400">
+                    Thank you for your feedback!
+                  </div>
+                )}
+                <div className="flex justify-end gap-2">
+                  <button
+                    className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    onClick={() => setIsFeedbackOpen(false)}
+                    disabled={isSubmittingFeedback}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className={`px-3 py-1 rounded text-white ${feedbackMessage.trim() && !isSubmittingFeedback ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-gray-400 cursor-not-allowed'}`}
+                    onClick={handleSubmitFeedback}
+                    disabled={!feedbackMessage.trim() || isSubmittingFeedback}
+                  >
+                    {isSubmittingFeedback ? 'Submitting...' : 'Submit'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
