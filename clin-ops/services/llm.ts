@@ -809,7 +809,6 @@ The final document should be ready to share with stakeholders.`;
     // Step 4: Final polish with appropriate formatting
     const polishingPrompt = `
 Please review and polish this ${getTabDisplayName(persona, currentTab)} document:
-
 ${consolidatedResult.response}
 
 Ensure it:
@@ -821,7 +820,8 @@ Ensure it:
 6. Maintains a ${persona === 'regulatoryAdvisor' ? 'compliance-focused and precise' : 'operational and actionable'} tone
 7. Would be immediately useful to the project team
 
-Return the polished document with Markdown formatting.`;
+Return only the polished document with Markdown formatting, without any preface, explanation, or meta commentary.
+Do not include phrases like "Of course", "I have reviewed", or "Here is the polished version"—start directly with the document content.`;
     
     const polishedResult = await generateAIResponse({
       prompt: polishingPrompt,
@@ -835,8 +835,20 @@ Return the polished document with Markdown formatting.`;
       // If polishing fails, return the consolidated content
       return consolidatedResult.response;
     }
-    
-    return polishedResult.response;
+
+    // Strip any leftover meta-preface lines the model might still include
+    const rawPolished = polishedResult.response.trimStart();
+
+    // Remove one or more leading lines that look like generic LLM prefaces
+    // (e.g., "Of course...", "Certainly...", "Sure...", "Here is...",
+    //  "I have reviewed...", "Below is...", etc.)
+    const cleanedPolished = rawPolished.replace(
+      /^(?:\s*(?:Of course|Certainly|Sure|Absolutely|Yes,|I have reviewed|I have polished|I've reviewed|I've polished|Here is|Heres|Here is the polished version|Below is|Below you'll find|In this document)[^\n]*\n)+/i,
+      ''
+    );
+
+    const finalText = cleanedPolished.trimStart();
+    return finalText.length > 0 ? finalText : rawPolished;
   } catch (error) {
     console.error('Error generating comprehensive tab content:', error);
     return `# ${getTabDisplayName(persona, currentTab)} (Error)
