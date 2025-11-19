@@ -19,6 +19,10 @@ let logger: pino.Logger | null = null
 
 export function getLogger(correlationId?: string) {
   if (!logger) {
+    // Disable pino-pretty in development to avoid worker thread crashes
+    // Use basic console logging instead
+    const isDev = process.env.NODE_ENV === 'development'
+    
     logger = pino({
       level: process.env.LOG_LEVEL || 'info',
       redact,
@@ -32,10 +36,11 @@ export function getLogger(correlationId?: string) {
         service: process.env.OTEL_SERVICE_NAME || 'clinops-app',
         env: process.env.NODE_ENV,
       },
-      transport: process.env.NODE_ENV === 'development' ? {
-        target: 'pino-pretty',
-        options: { colorize: true, singleLine: true },
-      } : undefined,
+      // Disable pino-pretty to prevent worker thread crashes
+      // transport: isDev ? {
+      //   target: 'pino-pretty',
+      //   options: { colorize: true, singleLine: true },
+      // } : undefined,
     })
   }
   return correlationId ? logger.child({ correlation_id: correlationId }) : logger
