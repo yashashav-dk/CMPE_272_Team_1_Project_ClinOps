@@ -257,39 +257,59 @@ Return only the corrected diagram code, nothing else (no explanations or comment
       );
 
       // Ensure any standalone `end` keyword is on its own line
-      // Sometimes the LLM (or previous processing) produces lines like
-      // `C->>DM: Enters data ... EDC end` which Mermaid cannot parse.
-      // This splits such cases into:
-      //   C->>DM: Enters data ... EDC
-      //   end
-      cleanChart = cleanChart.replace(/(.*?)(\s+end\b)/g, (match, before) => {
-        // If the line already starts with `end`, leave it as-is
-        if (/^\s*end\b/.test(match)) return match;
-        return `${before}\nend`;
-      });
-
-      // Handle cases where `end` is attached directly to a preceding token
-      cleanChart = cleanChart.replace(/([A-Z0-9\]\)})"'])end\b/g, '$1\nend');
-
-      // Handle specific malformed token `EDCend` seen in some diagrams by
-      // splitting it into `EDC` and a closing `end` on the next line.
-      cleanChart = cleanChart.replace(/EDCend\b/g, 'EDC\nend');
+      // This is critical for sequence diagrams with rect blocks
+      // Process line by line to properly handle 'end' keywords
+      const lines = cleanChart.split('\n');
+      const processedLines = [];
+      
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        
+        // Check if this line has 'end' keyword that's not part of a string
+        // Match 'end' that comes after a quoted string or other content
+        const endMatch = line.match(/^(.*["'])\s*end\s*$/i);
+        if (endMatch) {
+          // Split: keep the content before 'end', and put 'end' on next line
+          processedLines.push(endMatch[1]);
+          processedLines.push('    end');
+          continue;
+        }
+        
+        // Also check for 'end' attached without space after quote or bracket
+        const attachedEndMatch = line.match(/^(.*["'\]\)])end\s*$/i);
+        if (attachedEndMatch) {
+          processedLines.push(attachedEndMatch[1]);
+          processedLines.push('    end');
+          continue;
+        }
+        
+        // Keep line as-is if no issue found
+        processedLines.push(line);
+      }
+      
+      cleanChart = processedLines.join('\n');
 
       // Additional safety: comment out stray plain-text lines that are not valid Mermaid syntax
       // This prevents narrative lines like "Site Initiation Visit (SIV) & Tech Qualifi..." from
       // causing parse errors while keeping actual diagram definitions intact.
       const diagramLines = cleanChart.split('\n');
-      const processedLines = diagramLines.map((line) => {
+      const finalProcessedLines = diagramLines.map((line) => {
         const trimmed = line.trim();
         if (!trimmed) return line;
 
         // Keep known directive / structure lines as-is
-        if (/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitgraph|mindmap|timeline|sankey|xychart|quadrantChart|requirement|subgraph|end|section|click|style|link|accTitle|accDescr|accDescription|axisFormat)\b/i.test(trimmed)) {
+        // Note: Added support for sequence diagram keywords like Note, participant, rect, etc.
+        if (/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitgraph|mindmap|timeline|sankey|xychart|quadrantChart|requirement|subgraph|end|section|click|style|link|accTitle|accDescr|accDescription|axisFormat|participant|actor|Note|rect|activate|deactivate|loop|alt|opt|par|autonumber|title|destroy|box|critical|break)\b/i.test(trimmed)) {
           return line;
         }
 
-        // Keep lines that clearly contain edges or node definitions
-        if (/[<>-]{2,}|==>|:::|\[.*\]|\{.*\}/.test(trimmed)) {
+        // Keep lines that clearly contain edges or node definitions  
+        if (/[<>-]{2,}|==>|:::|\[.*\]|\{.*\}|->>|-->>/.test(trimmed)) {
+          return line;
+        }
+
+        // Keep lines with rgb/rgba colors (for rect blocks)
+        if (/rgb\(|rgba\(/.test(trimmed)) {
           return line;
         }
 
@@ -297,7 +317,7 @@ Return only the corrected diagram code, nothing else (no explanations or comment
         return `%% ${line}`;
       });
 
-      cleanChart = processedLines.join('\n');
+      cleanChart = finalProcessedLines.join('\n');
 
       // NOTE: The aggressive auto-fix regex chain below is intentionally disabled
       // because it was over-correcting valid Mermaid diagrams and causing
@@ -546,4 +566,14 @@ Return only the corrected diagram code, nothing else (no explanations or comment
   )
 }
 
-export default MermaidDiagram 
+// Wrap with React.memo to prevent re-renders when props haven't changed
+// This ensures that fixing/refreshing one diagram doesn't trigger re-renders of other diagrams
+export default React.memo(MermaidDiagram, (prevProps, nextProps) => {
+  // Only re-render if the chart content or other props have actually changed
+  return (
+    prevProps.chart === nextProps.chart &&
+    prevProps.projectId === nextProps.projectId &&
+    prevProps.contextInfo === nextProps.contextInfo &&
+    prevProps.className === nextProps.className
+  );
+}) 

@@ -106,6 +106,37 @@ export default function Home() {
           const u = await res.json()
           if (!ignore) {
             setUser(u)
+            
+            // Import any guest projects from localStorage first
+            if (typeof window !== 'undefined') {
+              const keys = Object.keys(window.localStorage)
+              const projectMetaKeys = keys.filter(key => key.startsWith('project:') && key.endsWith(':meta'))
+              
+              for (const key of projectMetaKeys) {
+                const projectId = key.replace('project:', '').replace(':meta', '')
+                const metaStr = window.localStorage.getItem(key)
+                
+                if (metaStr) {
+                  try {
+                    const meta = JSON.parse(metaStr)
+                    await fetch('/api/projects/ensure', {
+                      method: 'POST',
+                      credentials: 'include',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        projectId,
+                        name: meta.name || 'Untitled Project',
+                        description: meta.description || null
+                      })
+                    }).catch(err => console.error('Failed to import project:', projectId, err))
+                  } catch (err) {
+                    console.error('Failed to parse project meta:', key, err)
+                  }
+                }
+              }
+            }
+            
+            // Now fetch projects and redirect to first one
             const projectsRes = await fetch('/api/projects', { credentials: 'include' })
             if (projectsRes.ok) {
               const result = await projectsRes.json()
@@ -200,15 +231,49 @@ export default function Home() {
 
   function handleAuthSuccess(u: User) {
     setUser(u)
-    // Check if user has projects and show create project modal if not
+    // Import any guest projects from localStorage and check if user has projects
     ;(async () => {
       try {
+        // First, import any guest projects from localStorage
+        if (typeof window !== 'undefined') {
+          const keys = Object.keys(window.localStorage)
+          const projectMetaKeys = keys.filter(key => key.startsWith('project:') && key.endsWith(':meta'))
+          
+          for (const key of projectMetaKeys) {
+            const projectId = key.replace('project:', '').replace(':meta', '')
+            const metaStr = window.localStorage.getItem(key)
+            
+            if (metaStr) {
+              try {
+                const meta = JSON.parse(metaStr)
+                // Try to ensure this project exists in the database
+                await fetch('/api/projects/ensure', {
+                  method: 'POST',
+                  credentials: 'include',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    projectId,
+                    name: meta.name || 'Untitled Project',
+                    description: meta.description || null
+                  })
+                }).catch(err => console.error('Failed to import project:', projectId, err))
+              } catch (err) {
+                console.error('Failed to parse project meta:', key, err)
+              }
+            }
+          }
+        }
+        
+        // Then check if user has projects and show create project modal if not
         const projectsRes = await fetch('/api/projects', { credentials: 'include' })
         if (projectsRes.ok) {
           const result = await projectsRes.json()
           if (!result.success || result.data.length === 0) {
             // No projects, show create project modal
             setShowProjectModal(true)
+          } else {
+            // User has projects, redirect to the first one
+            router.push(`/${result.data[0].id}`)
           }
         }
       } catch (error) {
