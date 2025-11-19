@@ -140,9 +140,14 @@ export default function Home() {
             const projectsRes = await fetch('/api/projects', { credentials: 'include' })
             if (projectsRes.ok) {
               const result = await projectsRes.json()
-              if (result.success && result.data.length > 0) {
-                router.push(`/${result.data[0].id}`)
-                return
+              if (result.success) {
+                if (result.data.length > 0) {
+                  router.push(`/${result.data[0].id}`)
+                  return
+                }
+
+                // Logged-in users with no projects yet should see the new project modal automatically
+                setShowProjectModal(true)
               }
             }
           }
