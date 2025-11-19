@@ -299,8 +299,21 @@ setup_nginx() {
     
     # Determine server name
     if [ -z "$DOMAIN_NAME" ]; then
-        SERVER_NAME=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
-        print_info "Using IP address: $SERVER_NAME"
+        # Try to get EC2 public IP
+        SERVER_NAME=$(curl -s --connect-timeout 2 http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null)
+        
+        # Fallback to getting IP from hostname
+        if [ -z "$SERVER_NAME" ]; then
+            SERVER_NAME=$(hostname -I | awk '{print $1}')
+        fi
+        
+        # Ultimate fallback to localhost
+        if [ -z "$SERVER_NAME" ]; then
+            SERVER_NAME="_"
+            print_warning "Could not determine server IP, using catch-all server_name"
+        else
+            print_info "Using IP address: $SERVER_NAME"
+        fi
     else
         SERVER_NAME="$DOMAIN_NAME"
         print_info "Using domain: $SERVER_NAME"
@@ -392,13 +405,21 @@ EOF
     ln -sf /etc/nginx/sites-available/${APP_NAME} /etc/nginx/sites-enabled/
     
     # Test Nginx configuration
-    nginx -t
-    
-    # Restart Nginx
-    systemctl restart nginx
-    systemctl enable nginx
-    
-    print_info "Nginx setup complete"
+    print_info "Testing Nginx configuration..."
+    if nginx -t; then
+        print_info "Nginx configuration is valid"
+        
+        # Restart Nginx
+        systemctl restart nginx
+        systemctl enable nginx
+        
+        print_info "Nginx setup complete"
+    else
+        print_error "Nginx configuration test failed!"
+        print_error "Check the configuration at: /etc/nginx/sites-available/${APP_NAME}"
+        print_error "View the config with: cat /etc/nginx/sites-available/${APP_NAME}"
+        exit 1
+    fi
 }
 
 # ========================================
