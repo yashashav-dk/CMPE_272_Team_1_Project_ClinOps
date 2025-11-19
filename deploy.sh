@@ -299,21 +299,9 @@ setup_nginx() {
     
     # Determine server name
     if [ -z "$DOMAIN_NAME" ]; then
-        # Try to get EC2 public IP
-        SERVER_NAME=$(curl -s --connect-timeout 2 http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null)
-        
-        # Fallback to getting IP from hostname
-        if [ -z "$SERVER_NAME" ]; then
-            SERVER_NAME=$(hostname -I | awk '{print $1}')
-        fi
-        
-        # Ultimate fallback to localhost
-        if [ -z "$SERVER_NAME" ]; then
-            SERVER_NAME="_"
-            print_warning "Could not determine server IP, using catch-all server_name"
-        else
-            print_info "Using IP address: $SERVER_NAME"
-        fi
+        # Hardcoded EC2 public IP
+        SERVER_NAME="54.242.66.82"
+        print_info "Using hardcoded EC2 public IP: $SERVER_NAME"
     else
         SERVER_NAME="$DOMAIN_NAME"
         print_info "Using domain: $SERVER_NAME"
