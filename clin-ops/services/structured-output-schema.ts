@@ -17,12 +17,13 @@ export interface StructuredDashboardResponse {
     | WorkflowWidget
     | ListWidget
     | TextWidget
+    | ChartWidget
   >
 }
 
 export interface BaseWidget {
   id: string
-  type: 'diagram' | 'kpi' | 'table' | 'timeline' | 'workflow' | 'list' | 'text'
+  type: 'diagram' | 'kpi' | 'table' | 'timeline' | 'workflow' | 'list' | 'text' | 'chart'
   title: string
   order: number
 }
@@ -41,9 +42,11 @@ export interface KPIWidget extends BaseWidget {
   content: {
     value: number
     target?: number
-    unit: 'number' | 'percentage' | 'days' | 'count'
+    unit: 'number' | 'percentage' | 'days' | 'count' | 'currency'
     status: 'on-track' | 'at-risk' | 'critical' | 'unknown'
     trend?: 'up' | 'down' | 'stable'
+    trendValue?: number
+    historical?: Array<{ value: number }>
     description?: string
   }
 }
@@ -105,6 +108,18 @@ export interface TextWidget extends BaseWidget {
   }
 }
 
+export interface ChartWidget extends BaseWidget {
+  type: 'chart'
+  content: {
+    chartType: 'line' | 'bar' | 'pie' | 'area'
+    data: Array<Record<string, any>>
+    xAxisKey?: string
+    yAxisKeys?: string[]
+    colors?: string[]
+    description?: string
+  }
+}
+
 // Validation functions
 export function validateStructuredResponse(data: any): data is StructuredDashboardResponse {
   if (!data || typeof data !== 'object') return false
@@ -140,6 +155,9 @@ export function validateStructuredResponse(data: any): data is StructuredDashboa
         break
       case 'text':
         if (!widget.content?.markdown) return false
+        break
+      case 'chart':
+        if (!widget.content?.chartType || !Array.isArray(widget.content?.data)) return false
         break
       default:
         return false
@@ -184,6 +202,8 @@ IMPORTANT: You MUST return your response as valid JSON following this exact stru
         "unit": "count",
         "status": "on-track",
         "trend": "up",
+        "trendValue": 12.5,
+        "historical": [{"value": 100}, {"value": 110}, {"value": 115}, {"value": 120}, {"value": 125}],
         "description": "Current enrollment vs target"
       }
     },
@@ -262,18 +282,37 @@ IMPORTANT: You MUST return your response as valid JSON following this exact stru
         ],
         "listType": "checklist"
       }
+    },
+    {
+      "id": "unique-id-7",
+      "type": "chart",
+      "title": "Enrollment Trend",
+      "order": 6,
+      "content": {
+        "chartType": "line",
+        "data": [
+          {"month": "Jan", "enrolled": 20, "target": 25},
+          {"month": "Feb", "enrolled": 35, "target": 50},
+          {"month": "Mar", "enrolled": 58, "target": 75}
+        ],
+        "xAxisKey": "month",
+        "yAxisKeys": ["enrolled", "target"],
+        "description": "Monthly enrollment progress vs target"
+      }
     }
   ]
 }
 
 RULES:
 1. Return ONLY valid JSON - no markdown, no code blocks, no explanatory text
-2. Include multiple widgets (diagrams, KPIs, tables, timelines, workflows, lists) to create a comprehensive dashboard
+2. Include multiple widgets (diagrams, KPIs, tables, timelines, workflows, lists, charts) to create a comprehensive dashboard
 3. Use real data from the project information provided
-4. Ensure all Mermaid diagram syntax is properly escaped (use \\n for newlines in JSON strings)
-5. Make KPI values realistic based on project timeline and scope
+4. Ensure all Mermaid diagram syntax is properly escaped (use \n for newlines in JSON strings)
+5. Make KPI values realistic based on project timeline and scope, include trend data and historical values when possible
 6. Include status indicators (on-track, at-risk, critical) based on logical assessment
 7. Create actionable checklists with priority levels
 8. Ensure all dates use ISO format (YYYY-MM-DD)
-9. Generate unique IDs for each widget (e.g., "diagram-1", "kpi-enrollment", "table-sites")
+9. Generate unique IDs for each widget (e.g., "diagram-1", "kpi-enrollment", "table-sites", "chart-trends")
+10. Use chart widgets for time-series data, comparisons, and distributions (better than tables for visual insights)
+11. Chart data must have consistent keys across all objects in the data array
 `;

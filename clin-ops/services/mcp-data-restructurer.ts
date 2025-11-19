@@ -247,7 +247,9 @@ WIDGET TYPES TO INCLUDE (based on tab type):
 
 For "trialOverview":
 - Gantt diagram showing trial phases
-- KPIs: enrollment progress, site activation, timeline status
+- KPIs: enrollment progress, site activation, timeline status (with trends and historical data)
+- Chart: line chart showing enrollment trends over time
+- Chart: pie chart for site distribution or status breakdown
 - Table: site list with status
 - Timeline: key milestones
 - Workflow: study startup process
@@ -267,7 +269,9 @@ For "taskChecklists":
 - Timeline: task deadlines
 
 For "qualityMetrics":
-- KPIs: query rate, SAE reporting timeliness, enrollment forecast accuracy
+- KPIs: query rate, SAE reporting timeliness, enrollment forecast accuracy (with trends)
+- Chart: line chart showing quality metrics over time
+- Chart: bar chart comparing metrics across sites
 - Table: metrics dashboard with targets and actuals
 - Diagram: quality metrics framework flowchart
 
