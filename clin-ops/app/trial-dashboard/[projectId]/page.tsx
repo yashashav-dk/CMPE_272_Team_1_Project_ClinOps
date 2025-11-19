@@ -297,14 +297,6 @@ export default function TrialDashboard() {
                 </button>
               )}
 
-              <button
-                type="button"
-                onClick={() => setIsFeedbackOpen(true)}
-                className="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-100 rounded-lg flex items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs shadow-sm"
-              >
-                <span>Feedback</span>
-              </button>
-
               <a
                 href={`/${projectId}`}
                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm"
