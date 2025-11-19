@@ -1456,26 +1456,7 @@ Please provide the updated content that addresses the change request while maint
                   <span>
                     {isSendingToDashboard
                       ? 'Generating...'
-                      : '🤖 Smart Send'
-                    }
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleSendToDashboard(false)}
-                  className={`text-xs flex items-center gap-1 ${
-                    tabsSentToDashboard.has(`${currentPersona}-${currentTab}`)
-                      ? 'text-green-600 hover:text-green-700'
-                      : 'text-blue-600 hover:text-blue-700'
-                  }`}
-                  disabled={isSendingToDashboard || isTabContentLoading}
-                  title="Parse current markdown content to dashboard"
-                >
-                  <HiViewGrid className="h-3 w-3" />
-                  <span>
-                    {tabsSentToDashboard.has(`${currentPersona}-${currentTab}`)
-                      ? 'Sent ✓'
-                      : 'Send'
+                      : ' Smart Send'
                     }
                   </span>
                 </button>
