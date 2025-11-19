@@ -302,8 +302,6 @@ export default function TrialDashboard() {
                 onClick={() => setIsFeedbackOpen(true)}
                 className="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-100 rounded-lg flex items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs shadow-sm"
               >
-                <HiOutlineThumbUp className="w-4 h-4" />
-                <HiOutlineThumbDown className="w-4 h-4" />
                 <span>Feedback</span>
               </button>
 
