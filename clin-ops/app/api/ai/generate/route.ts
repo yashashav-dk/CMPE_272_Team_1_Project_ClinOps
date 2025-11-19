@@ -116,11 +116,12 @@ export async function POST(request: Request) {
       response,
       cached: false
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in generateAIResponse:', error);
+    const message = error instanceof Error ? error.message : 'Failed to generate AI response';
     return NextResponse.json({ 
       success: false, 
-      error: error.message || 'Failed to generate AI response'
+      error: message
     }, { status: 500 });
   }
 }

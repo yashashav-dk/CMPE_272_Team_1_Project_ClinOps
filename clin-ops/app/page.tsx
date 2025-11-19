@@ -200,6 +200,21 @@ export default function Home() {
 
   function handleAuthSuccess(u: User) {
     setUser(u)
+    // Check if user has projects and show create project modal if not
+    ;(async () => {
+      try {
+        const projectsRes = await fetch('/api/projects', { credentials: 'include' })
+        if (projectsRes.ok) {
+          const result = await projectsRes.json()
+          if (!result.success || result.data.length === 0) {
+            // No projects, show create project modal
+            setShowProjectModal(true)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check projects after login:', error)
+      }
+    })()
   }
 
   return (
