@@ -31,8 +31,9 @@ ANALYSIS INSTRUCTIONS:
 2. Identify KPIs (numbers with targets/goals) as kpi widgets
 3. Extract tables (markdown tables) as table widgets
 4. Find milestones/dates as timeline widgets
-5. Extract checklists and important lists as list widgets
-6. Capture remaining important text as text widgets
+5. Extract process steps and workflows as workflow widgets
+6. Extract checklists and important lists as list widgets
+7. Capture remaining important text as text widgets
 
 CRITICAL: Return ONLY the JSON object. No markdown formatting, no explanations, no code blocks.
 Start your response with { and end with }
@@ -77,7 +78,125 @@ Start your response with { and end with }
   } catch (error) {
     console.error('Error restructuring data:', error)
 
-    // Fallback: Create a basic structured response with text widget
+    // Fallback: Create a basic structured response with text and diagram widgets
+    // We manually extract mermaid diagrams to ensure they are preserved as distinct widgets
+
+    const widgets: Array<any> = [];
+    let lastIndex = 0;
+    let widgetCount = 0;
+
+    // Regex for standard markdown code blocks
+    const mermaidRegex = /```(?:mermaid)?\s*\n([\s\S]*?)```/g;
+
+    // Regex for unwrapped mermaid code (often found in error messages in the input)
+    // Captures content after "The diagram code is shown below:" until a clear section break or end of file
+    const unwrappedMermaidRegex = /The diagram code is shown below:\s*\n([\s\S]*?)(?=\n(?:[A-Z][a-zA-Z\s&]+:|(?:\d+\.)+\s+[A-Z]|\n\n[A-Z]|$))/g;
+
+    let match;
+
+    // Helper to process matches
+    const processMatch = (code: string, index: number, fullMatch: string) => {
+      // Add text before the diagram
+      if (index > lastIndex) {
+        const textContent = unstructuredContent.slice(lastIndex, index).trim();
+        if (textContent) {
+          widgets.push({
+            id: `text-fallback-${widgetCount++}`,
+            type: 'text',
+            title: 'Section Content',
+            order: widgetCount,
+            content: {
+              markdown: textContent,
+              summary: 'Content section'
+            }
+          });
+        }
+      }
+
+      // Add the diagram
+      const diagramCode = code.trim();
+      // Try to guess diagram type
+      let diagramType = 'flowchart'; // Default
+      if (diagramCode.includes('gantt')) diagramType = 'gantt';
+      else if (diagramCode.includes('sequenceDiagram')) diagramType = 'sequenceDiagram';
+      else if (diagramCode.includes('classDiagram')) diagramType = 'classDiagram';
+      else if (diagramCode.includes('stateDiagram')) diagramType = 'stateDiagram';
+      else if (diagramCode.includes('erDiagram')) diagramType = 'erDiagram';
+      else if (diagramCode.includes('journey')) diagramType = 'journey';
+      else if (diagramCode.includes('pie')) diagramType = 'pie';
+      else if (diagramCode.includes('timeline')) diagramType = 'timeline';
+
+      widgets.push({
+        id: `diagram-fallback-${widgetCount++}`,
+        type: 'diagram',
+        title: 'Visual Diagram',
+        order: widgetCount,
+        content: {
+          diagramType,
+          diagramCode,
+          description: 'Extracted diagram'
+        }
+      });
+
+      lastIndex = index + fullMatch.length;
+    };
+
+    // Process standard code blocks first
+    while ((match = mermaidRegex.exec(unstructuredContent)) !== null) {
+      processMatch(match[1], match.index, match[0]);
+    }
+
+    // If we didn't find anything with standard blocks, try the unwrapped regex
+    // We reset lastIndex only if we are starting a new search and haven't processed anything, 
+    // but here we might have mixed content. 
+    // However, usually it's one format or the other. 
+    // If we found standard blocks, we probably parsed the file correctly.
+    // If not, let's try the unwrapped one.
+
+    if (widgets.length === 0) {
+      lastIndex = 0; // Reset for second pass
+      while ((match = unwrappedMermaidRegex.exec(unstructuredContent)) !== null) {
+        // The match[0] includes the intro text, match[1] is the code.
+        // We want to treat the intro text as part of the "previous" text or just skip it?
+        // The regex captures "The diagram code is shown below:\n" as part of the match.
+        // We should probably include that intro text in the previous text block if we want to keep context,
+        // but the user wants the diagram.
+        // Let's just use the match index.
+        processMatch(match[1], match.index, match[0]);
+      }
+    }
+
+    // Add remaining text
+    if (lastIndex < unstructuredContent.length) {
+      const remainingText = unstructuredContent.slice(lastIndex).trim();
+      if (remainingText) {
+        widgets.push({
+          id: `text-fallback-${widgetCount++}`,
+          type: 'text',
+          title: 'Additional Content',
+          order: widgetCount,
+          content: {
+            markdown: remainingText,
+            summary: 'Remaining content'
+          }
+        });
+      }
+    }
+
+    // If no diagrams found, return original content as single text widget
+    if (widgets.length === 0) {
+      widgets.push({
+        id: 'text-fallback',
+        type: 'text',
+        title: 'Content',
+        order: 0,
+        content: {
+          markdown: unstructuredContent,
+          summary: 'Original content (restructuring failed)'
+        }
+      });
+    }
+
     return {
       metadata: {
         tabType,
@@ -85,18 +204,7 @@ Start your response with { and end with }
         title: `${tabType} Content`,
         generatedAt: new Date().toISOString()
       },
-      widgets: [
-        {
-          id: 'text-fallback',
-          type: 'text',
-          title: 'Content',
-          order: 0,
-          content: {
-            markdown: unstructuredContent,
-            summary: 'Original content (restructuring failed)'
-          }
-        }
-      ]
+      widgets
     }
   }
 }
@@ -142,16 +250,19 @@ For "trialOverview":
 - KPIs: enrollment progress, site activation, timeline status
 - Table: site list with status
 - Timeline: key milestones
+- Workflow: study startup process
 - Checklist: trial setup tasks
 
 For "trialTimeline":
 - Gantt chart with all phases
 - Timeline widget with critical path milestones
+- Workflow: sequential process steps
 - KPIs: days to first patient, enrollment rate
 - Table: milestone tracker with dates and status
 
 For "taskChecklists":
 - Multiple list widgets (pre-study, enrollment, safety, closeout)
+- Workflow: approval and review process
 - KPIs: checklist completion percentage
 - Timeline: task deadlines
 
@@ -163,13 +274,21 @@ For "qualityMetrics":
 For "documentControl":
 - Table: document inventory with versions and expiration
 - Checklist: required documents
+- Workflow: document review and approval process
 - ER Diagram: document relationships
 - KPIs: document compliance percentage
 
 For "complianceDiagrams":
 - Multiple flowchart diagrams (ICF workflow, SAE reporting, data integrity)
+- Workflow: compliance review steps
 - Checklist: compliance requirements
 - Timeline: regulatory submission schedule
+
+For "teamWorkflows":
+- Multiple workflow widgets for different team processes
+- Flowchart diagrams showing process flows
+- Checklist: workflow checkpoints
+- Timeline: workflow milestones
 
 CRITICAL: Return ONLY the JSON object. No markdown, no code blocks, no explanations.
 `
