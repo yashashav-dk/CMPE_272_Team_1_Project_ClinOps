@@ -223,20 +223,51 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col">
-      <header className="w-full border-b">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="font-semibold">ClinOps</div>
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen w-full flex flex-col bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-slate-50">
+      <header className="w-full border-b border-white/10 backdrop-blur-sm bg-slate-950/40">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-xl bg-indigo-500 flex items-center justify-center shadow-md shadow-indigo-500/40">
+              <span className="text-xs font-bold tracking-tight">CO</span>
+            </div>
+            <div>
+              <div className="font-semibold tracking-tight text-sm">ClinOps</div>
+              <div className="text-[11px] text-slate-400">AI Co‑pilot for Clinical Trials</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-xs">
             {user ? (
               <>
-                <span className="text-sm text-gray-700">{user.email}</span>
-                <button onClick={logout} className="border rounded px-3 py-1">Logout</button>
+                <span className="text-slate-300 hidden sm:inline">{user.email}</span>
+                <button
+                  onClick={logout}
+                  className="border border-slate-600/70 bg-slate-900/60 hover:bg-slate-800/80 text-slate-100 rounded-full px-3 py-1 transition-colors"
+                >
+                  Logout
+                </button>
               </>
             ) : (
               <>
-                <button onClick={() => setMode('login')} className={`border rounded px-3 py-1 ${mode === 'login' ? 'bg-black text-white' : ''}`}>Login</button>
-                <button onClick={() => setMode('register')} className={`border rounded px-3 py-1 ${mode === 'register' ? 'bg-black text-white' : ''}`}>Sign up</button>
+                <button
+                  onClick={() => setMode('login')}
+                  className={`rounded-full px-3 py-1 border text-xs transition-colors ${
+                    mode === 'login'
+                      ? 'bg-slate-50 text-slate-900 border-slate-50'
+                      : 'border-slate-600/70 text-slate-200 hover:bg-slate-800/80'
+                  }`}
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => setMode('register')}
+                  className={`rounded-full px-3 py-1 border text-xs transition-colors ${
+                    mode === 'register'
+                      ? 'bg-indigo-500 text-white border-indigo-400 shadow shadow-indigo-500/40'
+                      : 'border-slate-600/70 text-slate-200 hover:bg-slate-800/80'
+                  }`}
+                >
+                  Sign up
+                </button>
               </>
             )}
           </div>
@@ -244,29 +275,92 @@ export default function Home() {
       </header>
 
       <main className="flex-1">
-        <div className="max-w-5xl mx-auto px-4 py-10">
-          <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-            <div className="text-center space-y-4">
-              <h1 className="text-4xl font-bold">Welcome to ClinOps</h1>
-              <p className="text-gray-600 max-w-2xl text-lg">
-                Spin up a clinical trial project with an AI co-pilot in minutes. No login required to try it out.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowProjectModal(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg font-medium text-lg shadow-lg hover:shadow-xl transition-all"
-            >
-              Create a Project
-            </button>
-            <p className="text-sm text-gray-500">
-              Start experimenting immediately. {!user && 'Create an account later to save your work.'}
-            </p>
-
-            {!user && (
-              <div className="mt-8 w-full flex justify-center">
-                <AuthForm mode={mode} onSuccess={handleAuthSuccess} />
+        <div className="max-w-6xl mx-auto px-6 py-10 lg:py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+            {/* Left: Hero + visuals */}
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-[11px] text-emerald-200 mb-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Prototype • Instant trial workspaces</span>
               </div>
-            )}
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-tight">
+                Launch your clinical trial
+                <span className="block text-indigo-300">with an AI co‑pilot in minutes.</span>
+              </h1>
+              <p className="text-sm sm:text-base text-slate-300 max-w-xl">
+                Create structured requirements, timelines, and dashboards for complex studies without the usual onboarding friction.
+                Try it as a guest or sign up to keep your projects in one place.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => setShowProjectModal(true)}
+                  className="inline-flex items-center gap-2 rounded-full bg-indigo-500 hover:bg-indigo-400 text-white px-6 py-2.5 text-sm font-medium shadow-lg shadow-indigo-500/40 transition-transform hover:-translate-y-0.5"
+                >
+                  <span>New clinical project</span>
+                  <span className="text-indigo-100 text-xs">No login required</span>
+                </button>
+                <p className="text-[11px] text-slate-400 max-w-xs">
+                  Spin up a sandbox trial space. You can link it to an account later so nothing is lost.
+                </p>
+              </div>
+
+              <div className="mt-4 grid grid-cols-3 gap-3 max-w-md text-[11px] text-slate-300">
+                <div className="rounded-xl border border-slate-700/70 bg-slate-900/60 px-3 py-2">
+                  <div className="text-slate-100 font-medium text-xs">AI brief</div>
+                  <div>Create PRDs, FAQs, and risk logs from a short description.</div>
+                </div>
+                <div className="rounded-xl border border-slate-700/70 bg-slate-900/60 px-3 py-2">
+                  <div className="text-slate-100 font-medium text-xs">Smart dashboard</div>
+                  <div>Turn chat output into visual widgets automatically.</div>
+                </div>
+                <div className="rounded-xl border border-slate-700/70 bg-slate-900/60 px-3 py-2">
+                  <div className="text-slate-100 font-medium text-xs">Team‑ready</div>
+                  <div>Share projects with study leads and operations.</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Auth card */}
+            <div className="flex justify-center lg:justify-end">
+              <div className="w-full max-w-md rounded-2xl border border-slate-700/70 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-slate-950/60 p-6 sm:p-7">
+                <div className="mb-4">
+                  <h2 className="text-xl font-semibold text-slate-50 mb-1">
+                    {mode === 'login' ? 'Log in to your workspace' : 'Create a ClinOps account'}
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    {mode === 'login'
+                      ? 'Access your saved clinical projects and dashboards.'
+                      : 'Save projects, keep history, and collaborate with your team.'}
+                  </p>
+                </div>
+
+                {!user ? (
+                  <>
+                    <AuthForm mode={mode} onSuccess={handleAuthSuccess} />
+                    <div className="mt-4 flex items-center justify-between text-[11px] text-slate-400">
+                      <span>
+                        {mode === 'login'
+                          ? "Don't have an account?"
+                          : 'Already have an account?'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+                        className="text-indigo-300 hover:text-indigo-200 font-medium"
+                      >
+                        {mode === 'login' ? 'Sign up' : 'Log in'}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-sm text-slate-200">
+                    You are logged in as <span className="font-medium">{user.email}</span>. You can start by creating a new
+                    project or open an existing one from the dashboard.
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </main>
