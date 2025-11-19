@@ -43,11 +43,12 @@ export async function POST(request: Request) {
             error: 'Empty request body received'
           }, { status: 400 });
         }
-      } catch (parseError: any) {
+      } catch (parseError: unknown) {
         console.error('Error parsing JSON:', parseError);
+        const message = parseError instanceof Error ? parseError.message : 'Invalid JSON';
         return NextResponse.json({
           success: false,
-          error: `Error parsing request body: ${parseError.message || 'Invalid JSON'}`,
+          error: `Error parsing request body: ${message}`,
           receivedData: rawBody?.substring(0, 100) // Include the first portion of what was received for debugging
         }, { status: 400 });
       }
@@ -107,7 +108,8 @@ export async function POST(request: Request) {
 
       // Save tab content (replace existing for this chat)
       if (tabContent) {
-        for (const [tabTypeKey, content] of Object.entries(tabContent)) {
+        const entries = Object.entries(tabContent as Record<string, string>);
+        for (const [tabTypeKey, content] of entries) {
           await tx.tabContent.create({
             data: {
               id: crypto.randomUUID(),
@@ -121,7 +123,8 @@ export async function POST(request: Request) {
 
       // Save tab content generation (replace existing for this chat)
       if (tabContentGeneration) {
-        for (const [tabTypeKey, status] of Object.entries(tabContentGeneration)) {
+        const genEntries = Object.entries(tabContentGeneration as Record<string, string>);
+        for (const [tabTypeKey, status] of genEntries) {
           await tx.tabContentGeneration.create({
             data: {
               id: crypto.randomUUID(),
@@ -149,21 +152,33 @@ export async function POST(request: Request) {
       }
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Create safe error details for logging
-    const errorDetails = {
-      message: error?.message || (error instanceof Error ? error.toString() : 'Unknown error'),
-      type: error?.constructor?.name || typeof error,
-      code: error?.code,
-      name: error?.name
-    };
+    let message = 'Failed to save chat data';
+    let type: string = typeof error;
+    let code: string | undefined;
+    let name: string | undefined;
+
+    if (error instanceof Error) {
+      message = error.message || message;
+      type = error.constructor.name || type;
+      name = error.name;
+    } else if (typeof error === 'object' && error !== null) {
+      const errObj = error as { message?: string; code?: string; name?: string; constructor?: { name?: string } };
+      message = errObj.message || message;
+      type = errObj.constructor?.name || type;
+      code = errObj.code;
+      name = errObj.name;
+    }
+
+    const errorDetails = { message, type, code, name };
     
     console.error('Error saving chat data:', errorDetails);
     
     return NextResponse.json({
       success: false,
-      error: errorDetails.message || 'Failed to save chat data',
-      errorType: errorDetails.type
+      error: message,
+      errorType: type
     }, { status: 500 });
   }
 }

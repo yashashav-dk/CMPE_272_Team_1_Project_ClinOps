@@ -11,11 +11,12 @@ export async function PUT(request: Request) {
       success: true, 
       message: 'All AI response cache cleared successfully' 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error clearing all cache data:', error);
+    const message = error instanceof Error ? error.message : 'Failed to clear all cache data';
     return NextResponse.json({ 
       success: false, 
-      error: error.message || 'Failed to clear all cache data'
+      error: message
     }, { status: 500 });
   }
 }
