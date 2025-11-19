@@ -48,8 +48,6 @@ export default function TrialDashboard() {
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
 
-  const [reviewSort, setReviewSort] = useState<'newest' | 'highest'>('newest')
-
   const [reviews, setReviews] = useState<DashboardReview[]>([])
   const [averageRating, setAverageRating] = useState<number | null>(null)
   const [isLoadingReviews, setIsLoadingReviews] = useState(false)
@@ -262,12 +260,6 @@ export default function TrialDashboard() {
     : null
 
   const sortedReviews = [...reviews].sort((a, b) => {
-    if (reviewSort === 'newest') {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    }
-    const ratingA = a.rating ?? 0
-    const ratingB = b.rating ?? 0
-    if (ratingB !== ratingA) return ratingB - ratingA
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   })
 
@@ -458,17 +450,6 @@ export default function TrialDashboard() {
                   </div>
                 </div>
               )}
-              <div className="text-xs text-slate-600 dark:text-slate-200">
-                <label className="mr-1">Sort:</label>
-                <select
-                  className="border border-slate-300 dark:border-slate-600 rounded px-2 py-1 bg-white dark:bg-slate-900"
-                  value={reviewSort}
-                  onChange={(e) => setReviewSort(e.target.value as 'newest' | 'highest')}
-                >
-                  <option value="newest">Newest first</option>
-                  <option value="highest">Highest rating</option>
-                </select>
-              </div>
             </div>
           </div>
 
