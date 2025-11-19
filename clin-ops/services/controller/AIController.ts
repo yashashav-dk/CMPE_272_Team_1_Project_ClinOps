@@ -9,7 +9,7 @@ export interface LLMProvider {
 // Gemini Provider implementation using the SDK
 class GeminiProvider implements LLMProvider {
   private apiKey: string;
-  private model: string = 'gemini-2.5-pro';
+  private model: string = 'gemini-3-pro-preview';
   private maxRetries: number = 3;
   private retryDelay: number = 1000; // 1 second initial delay
 

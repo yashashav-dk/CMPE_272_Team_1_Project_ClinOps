@@ -11,47 +11,51 @@ export async function POST(request: Request) {
     let body;
     let rawBody;
     
-    // First try the standard request.json() method
+    // First, try to read as text (works better with sendBeacon)
     try {
-      body = await request.json();
-    } catch (jsonError) {
-      console.log('Standard JSON parsing failed, trying text parsing...', jsonError);
+      rawBody = await request.text();
       
-      // If that fails, get the raw text and try to parse it
-      try {
-        const clonedRequest = request.clone();
-        rawBody = await clonedRequest.text();
-        console.log('Raw request body received:', rawBody);
-        
-        // Only try to parse if there's actually content and looks like JSON
-        if (rawBody && rawBody.trim()) {
-          // Check if it looks like a JSON object or array
-          if ((rawBody.trim().startsWith('{') && rawBody.trim().endsWith('}')) || 
-              (rawBody.trim().startsWith('[') && rawBody.trim().endsWith(']'))) {
-            body = JSON.parse(rawBody);
-          } else {
-            console.log('Content does not appear to be valid JSON, received:', rawBody);
-            return NextResponse.json({
-              success: false,
-              error: 'Received content is not in valid JSON format'
-            }, { status: 400 });
-          }
-        } else {
-          console.log('Empty request body received');
-          return NextResponse.json({
-            success: false,
-            error: 'Empty request body received'
-          }, { status: 400 });
-        }
-      } catch (parseError: unknown) {
-        console.error('Error parsing JSON:', parseError);
-        const message = parseError instanceof Error ? parseError.message : 'Invalid JSON';
+      // Check if body is empty
+      if (!rawBody || !rawBody.trim()) {
+        console.log('Empty request body received, returning success for beacon requests');
+        // Return success for empty beacon requests (prevents errors on page unload)
         return NextResponse.json({
-          success: false,
-          error: `Error parsing request body: ${message}`,
-          receivedData: rawBody?.substring(0, 100) // Include the first portion of what was received for debugging
-        }, { status: 400 });
+          success: true,
+          message: 'No data to save'
+        }, { status: 200 });
       }
+      
+      // Try to parse the text as JSON
+      body = JSON.parse(rawBody);
+    } catch (parseError) {
+      console.error('Error parsing request body:', parseError);
+      console.log('Raw body:', rawBody?.substring(0, 200));
+      
+      // Return success for malformed beacon requests to avoid errors
+      return NextResponse.json({
+        success: true,
+        message: 'Could not parse request data'
+      }, { status: 200 });
+    }
+    
+    // If we got here with no body, return success
+    if (!body) {
+      return NextResponse.json({
+        success: true,
+        message: 'No data to save'
+      }, { status: 200 });
+    }
+    
+    // Validate we have required fields (if body exists)
+    if (!body.projectId || !body.userId) {
+      console.error('Missing required fields:', { 
+        hasProjectId: !!body.projectId, 
+        hasUserId: !!body.userId 
+      });
+      return NextResponse.json({
+        success: false,
+        error: 'Missing required fields: projectId or userId'
+      }, { status: 400 });
     }
 
     // Extract necessary fields

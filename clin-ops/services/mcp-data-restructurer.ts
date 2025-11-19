@@ -1,7 +1,7 @@
 // MCP-based Data Restructurer Service
 // Uses AI to transform unstructured markdown into structured dashboard-ready JSON
 
-import { generateAIResponse } from './ai-client'
+import { generateAIResponse } from './ai'
 import {
   StructuredDashboardResponse,
   validateStructuredResponse,
