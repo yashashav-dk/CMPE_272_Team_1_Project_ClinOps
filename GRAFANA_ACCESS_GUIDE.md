@@ -4,7 +4,7 @@
 
 You should access Grafana at:
 ```
-http://54.242.66.82/grafana/
+http://54.89.161.15/grafana/
 ```
 
 **Note**: It's `/grafana/` (not `/graphan/`) - make sure the spelling is correct!
@@ -39,8 +39,8 @@ After running the fix, Grafana will be available at:
 
 | URL | Access Method | Port |
 |-----|---------------|------|
-| `http://54.242.66.82/grafana/` | Via Nginx (recommended) | 80 |
-| `http://54.242.66.82:3001` | Direct to Grafana | 3001 |
+| `http://54.89.161.15/grafana/` | Via Nginx (recommended) | 80 |
+| `http://54.89.161.15:3001` | Direct to Grafana | 3001 |
 
 ### **Default Credentials:**
 ```
@@ -141,7 +141,7 @@ curl -I http://localhost:3001/grafana/
 
 ### **3. Test via Nginx**
 ```bash
-curl -I http://54.242.66.82/grafana/
+curl -I http://54.89.161.15/grafana/
 # Should show: HTTP/1.1 200 OK or 302 Found
 ```
 
@@ -226,7 +226,7 @@ docker compose -f docker-compose.production.yml restart grafana
 
 After the fix:
 
-1. Navigate to `http://54.242.66.82/grafana/`
+1. Navigate to `http://54.89.161.15/grafana/`
 2. You should see the Grafana login page
 3. Login with `admin` / `admin`
 4. Grafana will ask you to change the password
@@ -239,7 +239,7 @@ After the fix:
 | Mistake | Correct |
 |---------|---------|
 | `/graphan/` | `/grafana/` |
-| `http://54.242.66.82/grafana` (no trailing slash) | `http://54.242.66.82/grafana/` |
+| `http://54.89.161.15/grafana` (no trailing slash) | `http://54.89.161.15/grafana/` |
 | Using port `:3000` | Use `:3001` |
 | Forgetting to start Docker | `docker compose up -d` |
 
@@ -249,7 +249,7 @@ After the fix:
 
 ### **Bookmark This URL:**
 ```
-http://54.242.66.82/grafana/
+http://54.89.161.15/grafana/
 ```
 
 ### **Check if Services Are Running:**
@@ -277,10 +277,10 @@ Once Grafana is working, these should also work:
 
 | Tool | URL |
 |------|-----|
-| **Prometheus** | http://54.242.66.82/prometheus/ |
-| **AlertManager** | http://54.242.66.82/alertmanager/ |
-| **Loki** | http://54.242.66.82:3100 (API only) |
-| **Tempo** | http://54.242.66.82:3200 (API only) |
+| **Prometheus** | http://54.89.161.15/prometheus/ |
+| **AlertManager** | http://54.89.161.15/alertmanager/ |
+| **Loki** | http://54.89.161.15:3100 (API only) |
+| **Tempo** | http://54.89.161.15:3200 (API only) |
 
 ---
 
@@ -307,7 +307,7 @@ docker exec clinops-grafana env | grep GF_SERVER
 3. **Test from local machine:**
 ```bash
 # From your laptop:
-curl -v http://54.242.66.82/grafana/
+curl -v http://54.89.161.15/grafana/
 ```
 
 ---

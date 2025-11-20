@@ -36,7 +36,7 @@ APP_NAME="clinops"
 print_info "Fixing Nginx configuration..."
 
 # Hardcoded server IP (EC2 public IP)
-SERVER_NAME="54.242.66.82"
+SERVER_NAME="54.89.161.15"
 print_info "Using hardcoded server IP: $SERVER_NAME"
 
 # Backup existing config

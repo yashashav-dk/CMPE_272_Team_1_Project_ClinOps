@@ -116,17 +116,17 @@ fi
 
 # Check 8: Test Nginx proxy to Grafana
 print_step "8. Testing Nginx proxy to Grafana..."
-RESPONSE_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://54.242.66.82/grafana/ 2>/dev/null || echo "000")
+RESPONSE_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://54.89.161.15/grafana/ 2>/dev/null || echo "000")
 if [ "$RESPONSE_CODE" = "200" ] || [ "$RESPONSE_CODE" = "302" ]; then
-    print_info "Grafana is accessible via Nginx at http://54.242.66.82/grafana/"
+    print_info "Grafana is accessible via Nginx at http://54.89.161.15/grafana/"
     echo ""
     echo "========================================"
     echo "  ✓ Grafana is working!"
     echo "========================================"
     echo ""
     echo "Access URLs:"
-    echo "  - Via Nginx: http://54.242.66.82/grafana/"
-    echo "  - Direct:    http://54.242.66.82:3001"
+    echo "  - Via Nginx: http://54.89.161.15/grafana/"
+    echo "  - Direct:    http://54.89.161.15:3001"
     echo ""
     echo "Default credentials:"
     echo "  Username: admin"

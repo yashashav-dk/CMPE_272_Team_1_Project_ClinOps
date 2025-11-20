@@ -300,7 +300,7 @@ setup_nginx() {
     # Determine server name
     if [ -z "$DOMAIN_NAME" ]; then
         # Hardcoded EC2 public IP
-        SERVER_NAME="54.242.66.82"
+        SERVER_NAME="54.89.161.15"
         print_info "Using hardcoded EC2 public IP: $SERVER_NAME"
     else
         SERVER_NAME="$DOMAIN_NAME"
