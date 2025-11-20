@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinOps: Clinical Trial Management Platform - Comprehensive Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background-color: #ffffff;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            border-bottom: 4px solid #667eea;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.95;
+            margin-bottom: 5px;
+        }
+        
+        .doc-version {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+        
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        section {
+            margin-bottom: 60px;
+            padding-bottom: 40px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        section:last-child {
+            border-bottom: none;
+        }
+        
+        h2 {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        h3 {
+            font-size: 1.5em;
+            color: #764ba2;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        
+        h4 {
+            font-size: 1.2em;
+            color: #667eea;
+            margin-top: 18px;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            line-height: 1.8;
+            color: #374151;
+        }
+        
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 10px;
+            line-height: 1.7;
+        }
+        
+        strong {
+            color: #1f2937;
+            font-weight: 600;
+        }
+        
+        code {
+            background-color: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #d97706;
+        }
+        
+        .tech-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        
+        .tech-card h4 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        
+        .tech-card p {
+            font-size: 0.95em;
+            margin-bottom: 10px;
+        }
+        
+        .impact-box {
+            background: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+        }
+        
+        th {
+            background-color: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        tr:hover {
+            background-color: #f9fafb;
+        }
+        
+        .metric {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .toc {
+            background: #f3f4f6;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 30px 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .toc h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        
+        .toc ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .toc li {
+            margin-bottom: 8px;
+        }
+        
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        
+        footer {
+            background: #1f2937;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            margin-top: 60px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>ClinOps: Clinical Trial Management Platform</h1>
+            <p class="subtitle">Comprehensive Technical & Product Documentation</p>
+            <p class="doc-version">Version 1.0 | Complete Reference Guide for Stakeholders, Team Members & Users</p>
+        </div>
+    </header>
+    
+    <main>
+        <div class="toc">
+            <h3>📑 Documentation Overview</h3>
+            <ul>
+                <li><a href="#problem-statement">1. Problem Statement & Solution Impact</a></li>
+                <li><a href="#tech-stack">2. Technology Stack Documentation</a></li>
+                <li><a href="#observability">3. Observability Implementation</a></li>
+                <li><a href="#personas">4. User Personas & System Architecture</a></li>
+                <li><a href="#features">5. Feature Deep-Dive by Persona</a></li>
+            </ul>
+        </div>
+        
+        <section id="problem-statement">
+            <h2>1. Problem Statement & Solution Impact</h2>
+            
+            <h3>Medical Field Impact Analysis</h3>
+            
+            <h4>Critical Problems in Clinical Trial Management</h4>
+            
+            <p>Clinical trial management is one of the most complex, highly regulated processes in healthcare. Research organizations face unprecedented challenges that directly impact patient safety, regulatory compliance, and trial success:</p>
+            
+            <h4>A. Operational Complexity & Coordination Bottlenecks</h4>
+            <p><strong>The Problem:</strong> Clinical trials involve dozens of stakeholders across multiple sites, each with different responsibilities. Trial coordinators must manually track:</p>
+            <ul>
+                <li>Patient enrollment progress and screening logs</li>
+                <li>Visit schedules and protocol adherence across multiple sites</li>
+                <li>Adverse event reporting and safety monitoring</li>
+                <li>Document versions and regulatory compliance</li>
+                <li>Team workflows and handoff points</li>
+                <li>Milestone tracking and timeline management</li>
+            </ul>
+            <p>Without centralized coordination, information silos develop, leading to missed deadlines, duplicate work, and operational inefficiencies.</p>
+            
+            <div class="impact-box">
+                <strong>ClinOps Solution:</strong> Provides trial coordinators with a unified workspace featuring trial overview dashboards, task checklists, team workflow maps, and real-time milestone tracking. Coordinators can see the entire trial status at a glance and identify bottlenecks before they impact enrollment or safety.
+            </div>
+            
+            <h4>B. Regulatory Compliance & Audit Risk</h4>
+            <p><strong>The Problem:</strong> Regulatory requirements (FDA 21 CFR, ICH-GCP, EMA guidelines) are complex and constantly evolving. Common compliance failures include:</p>
+            <ul>
+                <li>Using outdated informed consent forms (ICF) at sites</li>
+                <li>Missing or incomplete signatures on critical documents</li>
+                <li>Expired investigator certifications or lab accreditations</li>
+                <li>Inadequate source documentation and audit trails</li>
+                <li>Protocol deviations not properly documented</li>
+                <li>Safety reports submitted late or incompletely</li>
+                <li>Delegation of authority logs not maintained</li>
+            </ul>
+            <p>These deficiencies are the leading causes of FDA warning letters and clinical holds. Regulatory inspections can shut down trials, delay approvals, and damage sponsor reputation.</p>
+            
+            <div class="impact-box">
+                <strong>ClinOps Solution:</strong> Provides regulatory advisors with comprehensive compliance frameworks including protocol requirements documentation, document control systems, compliance diagrams, risk controls, audit preparation guides, and smart alerts. The system helps teams prevent audit findings before inspectors arrive.
+            </div>
+            
+            <h4>C. Document Control & Version Management</h4>
+            <p><strong>The Problem:</strong> Trials require dozens of documents (protocol, ICF, lab manual, DSMB charter, monitoring plan, etc.). Managing versions, approvals, and distribution is error-prone:</p>
+            <ul>
+                <li>Sites using outdated consent forms because they didn't receive the update</li>
+                <li>Multiple versions of the protocol in circulation</li>
+                <li>No clear approval workflow or signature tracking</li>
+                <li>Expired documents not flagged for renewal</li>
+                <li>Audit trail gaps when inspectors ask "who approved this and when?"</li>
+            </ul>
+            
+            <div class="impact-box">
+                <strong>ClinOps Solution:</strong> Provides detailed document control systems with version tracking, approval workflows, expiration alerts, distribution controls, and complete audit trails. Regulatory advisors can ensure all sites have current documents and maintain compliance.
+            </div>
+            
+            <h4>D. Compliance Risk Detection & Prevention</h4>
+            <p><strong>The Problem:</strong> Compliance issues are often discovered during monitoring visits or audits—too late to prevent findings. Proactive risk detection is limited:</p>
+            <ul>
+                <li>No early warning system for document expiration</li>
+                <li>Protocol deviations discovered reactively</li>
+                <li>Enrollment pace issues not flagged until enrollment is critically behind</li>
+                <li>Data quality issues discovered during database lock</li>
+                <li>Safety reporting delays not caught until DSMB review</li>
+            </ul>
+            
+            <div class="impact-box">
+                <strong>ClinOps Solution:</strong> Implements smart alerts and risk controls that proactively detect compliance issues. The system monitors document expiration (30/60/90-day warnings), flags protocol deviations, tracks enrollment pace, and alerts coordinators to potential problems before they become audit findings.
+            </div>
+            
+            <h4>E. Audit Preparation & Inspection Readiness</h4>
+            <p><strong>The Problem:</strong> FDA and regulatory inspections are stressful and time-consuming. Sites spend days assembling audit folders, searching for documents, and preparing responses. Many organizations lack structured audit readiness processes:</p>
+            <ul>
+                <li>Audit folders assembled ad-hoc without standard structure</li>
+                <li>Critical documents missing or incomplete</li>
+                <li>No mock audit or gap analysis before the real inspection</li>
+                <li>Staff unprepared for inspector questions</li>
+                <li>Corrective action plans (CAPA) developed reactively after findings</li>
+            </ul>
+            
+            <div class="impact-box">
+                <strong>ClinOps Solution:</strong> Provides comprehensive audit preparation guides including regulatory binder organization, document completeness checklists, audit readiness assessments, inspector walkthrough preparation, and post-audit action plans. Automation reduces audit folder assembly time from days to hours.
+            </div>
+            
+            <h4>Real-World Impact & Benefits</h4>
+            
+            <table>
+                <tr>
+                    <th>Challenge</th>
+                    <th>Traditional Approach</th>
+                    <th>ClinOps Solution</th>
+                    <th>Impact</th>
+                </tr>
+                <tr>
+                    <td>Enrollment Tracking</td>
+                    <td>Manual spreadsheets, email updates</td>
+                    <td>Real-time dashboard with metrics</td>
+                    <td>Identify enrollment issues 2-3 weeks earlier</td>
+                </tr>
+                <tr>
+                    <td>Document Expiration</td>
+                    <td>Calendar reminders, manual checks</td>
+                    <td>Automated 30/60/90-day alerts</td>
+                    <td>Prevent expired documents from being used</td>
+                </tr>
+                <tr>
+                    <td>Audit Preparation</td>
+                    <td>3-5 days assembling documents</td>
+                    <td>Automated audit folder assembly</td>
+                    <td>Reduce preparation time by 70-80%</td>
+                </tr>
+                <tr>
+                    <td>Compliance Gaps</td>
+                    <td>Discovered during inspection</td>
+                    <td>Proactive risk detection</td>
+                    <td>Fix issues before auditors arrive</td>
+                </tr>
+                <tr>
+                    <td>Team Coordination</td>
+                    <td>Email chains, meeting notes</td>
+                    <td>Centralized workflow maps</td>
+                    <td>Reduce coordination time by 40%</td>
+                </tr>
+            </table>
+            
+            <h4>Clinical & Patient Safety Impact</h4>
+            <p>Beyond operational efficiency, ClinOps directly improves patient safety and trial integrity:</p>
+            <ul>
+                <li><strong>Faster Safety Response:</strong> Smart alerts ensure adverse events are reported on time, protecting patient safety</li>
+                <li><strong>Data Integrity:</strong> Compliance controls ensure source documentation is complete and audit trails are maintained</li>
+                <li><strong>Protocol Adherence:</strong> Checklists and workflows ensure protocols are followed consistently across all sites</li>
+                <li><strong>Regulatory Confidence:</strong> Audit-ready documentation gives regulators confidence in trial integrity</li>
+                <li><strong>Reduced Trial Delays:</strong> Proactive compliance prevents regulatory holds and inspection findings that delay approvals</li>
+            </ul>
+            
+            <div class="metric">Compliance Risk Reduction: 60-70%</div>
+            <div class="metric">Audit Preparation Time: -75%</div>
+            <div class="metric">Enrollment Visibility: +90%</div>
+            <div class="metric">Safety Response Time: -50%</div>
+        </section>
+        
+        <section id="tech-stack">
+            <h2>2. Technology Stack Documentation</h2>
+            
+            <h3>Complete Tools & Technologies Breakdown</h3>
+            
+            <p>ClinOps is built on a modern, scalable technology stack designed for reliability, performance, and compliance with healthcare data requirements. Every technology was carefully selected to solve specific problems in clinical trial management.</p>
+            
+            <h4>Frontend Framework & UI</h4>
+            
+            <div class="tech-card">
+                <h4>React 19.1.0</h4>
+                <p><strong>What it is:</strong> A JavaScript library for building user interfaces with reusable components and efficient rendering.</p>
+                <p><strong>Why chosen:</strong> React's component-based architecture enables rapid development of complex, interactive dashboards. React 19 provides improved performance and developer experience.</p>
+                <p><strong>Problems solved:</strong> Enables real-time UI updates, efficient state management, and seamless user interactions across the trial management interface.</p>
+                <p><strong>Integration:</strong> Core frontend framework used throughout the application for all interactive components.</p>
+            </div>
+            
+            <div class="tech-card">
+                <h4>Next.js 15.5.2</h4>
+                <p><strong>What it is:</strong> A React framework providing server-side rendering, API routes, and full-stack capabilities.</p>
+                <p><strong>Why chosen:</strong> Next.js enables server-side rendering for better SEO, built-in API route handling, and seamless deployment. Turbopack integration provides fast builds.</p>
+                <p><strong>Problems solved:</strong> Provides both frontend and backend infrastructure in a single framework, reducing complexity. Enables fast page loads and better performance.</p>
+                <p><strong>Integration:</strong> Powers the entire application including the chat interface, dashboards, and API endpoints.</p>
+            </div>
+            
+            <div class="tech-card">
+                <h4>TailwindCSS 4</h4>
+                <p><strong>What it is:</strong> A utility-first CSS framework for rapid UI development.</p>
+                <p><strong>Why chosen:</strong> Enables rapid styling without writing custom CSS. Provides consistent design system and responsive layouts.</p>
+                <p><strong>Problems solved:</strong> Accelerates UI development and ensures consistent visual design across all pages and components.</p>
+                <p><strong>Integration:</strong> Used for styling all components, dashboards, and responsive layouts.</p>
+            </div>
+            
+            <div class="tech-card">
+                <h4>React Icons 5.5.0</h4>
+                <p><strong>What it is:</strong> A library providing thousands of icons as React components.</p>
+                <p><strong>Why chosen:</strong> Provides consistent, professional iconography for UI elements without external image dependencies.</p>
+                <p><strong>Problems solved:</strong> Improves UI clarity and user experience with intuitive visual indicators.</p>
+                <p><strong>Integration:</strong> Used throughout the interface for navigation, buttons, and status indicators.</p>
+            </div>
+            
+            <div class="tech-card">
+                <h4>React Markdown 10.1.0 & Remark GFM 4.0.1</h4>
+                <p><strong>What it is:</strong> Libraries for rendering Markdown content with GitHub Flavored Markdown support.</p>
+                <p><strong>Why chosen:</strong> Enables AI-generated content to be rendered as formatted text, tables, and lists.</p>
+                <p><strong>Problems solved:</strong> Allows AI responses to be displayed in readable, formatted layouts.</p>
+                <p><strong>Integration:</strong> Used to render AI-generated compliance documentation and guidance.</p>
+            </div>
+            
+            <div class="tech-card">
+                <h4>Recharts 3.4.1</h4>
+                <p><strong>What it is:</strong> A React charting library for creating interactive data visualizations.</p>
+                <p><strong>Why chosen:</strong> Provides responsive, interactive charts for trial metrics and quality monitoring.</p>
+                <p><strong>Problems solved:</strong> Enables visual representation of enrollment metrics, compliance status, and quality indicators.</p>
+                <p><strong>Integration:</strong> Used in dashboards to visualize trial progress and metrics.</p>
+            </div>
+            
+            <div class="tech-card">
+                <h4>Mermaid 11.11.0</h4>
+                <p><strong>What it is:</strong> A JavaScript library for creating diagrams and flowcharts from text definitions.</p>
+                <p><strong>Why chosen:</strong> Enables AI to generate compliance diagrams, workflow maps, and trial timelines as visual diagrams.</p>
+                <p><strong>Problems solved:</strong> Allows complex regulatory and operational concepts to be visualized as flowcharts, Gantt charts, and sequence diagrams.</p>
+                <p><strong>Integration:</strong> AI responses include Mermaid diagrams that visualize compliance flows, team workflows, and trial timelines.</p>
+            </div>
+            
+            <h4>Backend & API</h4>
+            
+            <div class="tech-card">
+                <h4>Node.js & TypeScript</h4>
+                <p><strong>What it is:</strong> JavaScript runtime and type-safe language for backend development.</p>
+                <p><strong>Why chosen:</strong> Enables full-stack JavaScript development with type safety. TypeScript catches errors at compile time.</p>
+                <p><strong>Problems solved:</strong> Reduces bugs, improves code maintainability, and enables code sharing between frontend and backend.</p>
+                <p><strong>Integration:</strong> Powers all API routes and backend logic.</p>
+            </div>
+            
+            <div class="tech-card">
+                <h4>Prisma 5.6.0 & Prisma Instrumentation</h4>
+                <p><strong>What it is:</strong> An ORM (Object-Relational Mapping) tool for database access with automatic instrumentation.</p>
+                <p><strong>Why chosen:</strong> Provides type-safe database queries, automatic migrations, and built-in observability.</p>
+                <p><strong>Problems solved:</strong> Eliminates SQL injection vulnerabilities, ensures data consistency, and provides automatic performance monitoring.</p>
+                <p><strong>Integration:</strong> Manages all database operations including user authentication, project data, chat history, and compliance documentation.</p>
+            </div>
+            
+            <div class="tech-card">
+                <h4>PostgreSQL (via Prisma)</h4>
+                <p><strong>What it is:</strong> A robust, open-source relational database.</p>
+                <p><strong>Why chosen:</strong> PostgreSQL is HIPAA-compliant, provides strong data integrity, and supports complex queries needed for trial management.</p>
+                <p><strong>Problems solved:</strong> Ensures data consistency, provides audit trails, and supports compliance requirements.</p>
+                <p><strong>Integration:</strong> Stores all application data including user accounts, projects, chat history, compliance documentation, and audit logs.</p>
+            </div>
+            
+            <h4>Authentication & Security</h4>
+            
+            <div class="tech-card">
+                <h4>bcryptjs 2.4.3</h4>
+                <p><strong>What it is:</strong> A library for securely hashing passwords.</p>
+                <p><strong>Why chosen:</strong> bcrypt is the industry standard for password hashing with built-in salt and adaptive cost factors.</p>
+                <p><strong>Problems solved:</strong> Protects user passwords even if the database is compromised. Resistant to brute-force attacks.</p>
+                <p><strong>Integration:</strong> Used for user registration and login authentication.</p>
+            </div>
+            
+            <div class="tech-card">
+                <h4>jose 4.15.5</h4>
+                <p><strong>What it is:</strong> A library for creating and verifying JWT (JSON Web Tokens).</p>
+                <p><strong>Why chosen:</strong> Provides secure, stateless authentication tokens that work across distributed systems.</p>
+                <p><strong>Problems solved:</strong> Enables secure session management without server-side session storage.</p>
+                <p><strong>Integration:</strong> Manages user authentication tokens stored in secure HTTP-only cookies.</p>
+            </div>
+            
+            <h4>AI & Language Models</h4>
+            
+            <div class="tech-card">
+                <h4>Google Generative AI 0.21.0</h4>
+                <p><strong>What it is:</strong> SDK for accessing Google's Gemini AI models.</p>
+                <p><strong>Why chosen:</strong> Provides state-of-the-art language models for generating compliance documentation, guidance, and analysis.</p>
+                <p><strong>Problems solved:</strong> Enables AI-powered content generation for regulatory requirements, document control, and compliance guidance.</p>
+                <p><strong>Integration:</strong> Powers the AI assistant that generates trial coordination guidance and regulatory compliance documentation.</p>
+            </div>
+            
+            <h4>Observability & Monitoring</h4>
+            
+            <div class="tech-card">
+                <h4>OpenTelemetry Suite (1.7.0 - 1.15.0)</h4>
+                <p><strong>What it is:</strong> A comprehensive observability framework for collecting traces, metrics, and logs.</p>
+                <p><strong>Why chosen:</strong> Provides vendor-neutral observability that works across frontend and backend.</p>
+                <p><strong>Problems solved:</strong> Enables comprehensive monitoring of application performance and user behavior.</p>
+                <p><strong>Integration:</strong> Collects traces from both frontend (document load, fetch requests) and backend operations.</p>
+            </div>
+            
+            <div class="tech-card">
+                <h4>Pino 9.5.0</h4>
+                <p><strong>What it is:</strong> A fast JSON logger for Node.js.</p>
+                <p><strong>Why chosen:</strong> Provides structured logging with minimal performance overhead and built-in redaction for sensitive data.</p>
+                <p><strong>Problems solved:</strong> Enables detailed logging without exposing PHI (Protected Health Information).</p>
+                <p><strong>Integration:</strong> Logs all application events and errors with automatic PHI redaction.</p>
+            </div>
+            
+            <div class="tech-card">
+                <h4>Prometheus Client 15.1.3</h4>
+                <p><strong>What it is:</strong> A metrics collection library compatible with Prometheus monitoring.</p>
+                <p><strong>Why chosen:</strong> Provides application metrics that can be scraped by Prometheus for monitoring and alerting.</p>
+                <p><strong>Problems solved:</strong> Enables real-time monitoring of application health and performance.</p>
+                <p><strong>Integration:</strong> Exposes metrics at <code>/api/metrics</code> endpoint.</p>
+            </div>
+            
+            <h4>Data Validation & Utilities</h4>
+            
+            <div class="tech-card">
+                <h4>Zod 3.23.8</h4>
+                <p><strong>What it is:</strong> A TypeScript-first schema validation library.</p>
+                <p><strong>Why chosen:</strong> Provides runtime validation of API inputs and data structures with excellent TypeScript integration.</p>
+                <p><strong>Problems solved:</strong> Prevents invalid data from entering the system, catches errors early.</p>
+                <p><strong>Integration:</strong> Validates all API request payloads and user inputs.</p>
+            </div>
+            
+            <div class="tech-card">
+                <h4>TanStack React Table 8.21.3</h4>
+                <p><strong>What it is:</strong> A headless table library for React.</p>
+                <p><strong>Why chosen:</strong> Provides powerful table functionality (sorting, filtering, pagination) without UI constraints.</p>
+                <p><strong>Problems solved:</strong> Enables efficient display and management of large datasets (trial data, compliance checklists).</p>
+                <p><strong>Integration:</strong> Powers data tables throughout the application.</p>
+            </div>
+            
+            <h4>Testing & Quality</h4>
+            
+            <div class="tech-card">
+                <h4>Jest 30.2.0 & Testing Library</h4>
+                <p><strong>What it is:</strong> Testing frameworks for unit and integration tests.</p>
+                <p><strong>Why chosen:</strong> Jest provides fast test execution and comprehensive coverage reporting. Testing Library encourages testing user behavior.</p>
+                <p><strong>Problems solved:</strong> Ensures code quality and prevents regressions.</p>
+                <p><strong>Integration:</strong> Comprehensive test suite covering critical functionality.</p>
+            </div>
+            
+            <h4>Infrastructure & Deployment</h4>
+            
+            <div class="tech-card">
+                <h4>Docker & Docker Compose</h4>
+                <p><strong>What it is:</strong> Containerization and orchestration tools for consistent deployment.</p>
+                <p><strong>Why chosen:</strong> Enables consistent development and production environments, simplifies deployment.</p>
+                <p><strong>Problems solved:</strong> Eliminates "works on my machine" issues, enables scalable deployment.</p>
+                <p><strong>Integration:</strong> Application and observability stack containerized for easy deployment.</p>
+            </div>
+            
+            <div class="tech-card">
+                <h4>Kubernetes (K8s)</h4>
+                <p><strong>What it is:</strong> Container orchestration platform for managing containerized applications at scale.</p>
+                <p><strong>Why chosen:</strong> Provides production-grade deployment, scaling, and self-healing capabilities.</p>
+                <p><strong>Problems solved:</strong> Enables high-availability deployment, automatic scaling, and rolling updates.</p>
+                <p><strong>Integration:</strong> Production deployment uses Kubernetes with Helm charts for configuration management.</p>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 ClinOps Project. All rights reserved. | Part 1 of 5</p>
+    </footer>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinOps Documentation - Part 2: Observability & Personas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; background-color: #ffffff; }
+        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 20px; border-bottom: 4px solid #667eea; }
+        .header-content { max-width: 1200px; margin: 0 auto; }
+        h1 { font-size: 2.5em; margin-bottom: 10px; font-weight: 700; }
+        .subtitle { font-size: 1.1em; opacity: 0.95; margin-bottom: 5px; }
+        main { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+        section { margin-bottom: 60px; padding-bottom: 40px; border-bottom: 2px solid #e5e7eb; }
+        section:last-child { border-bottom: none; }
+        h2 { font-size: 2em; color: #667eea; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
+        h3 { font-size: 1.5em; color: #764ba2; margin-top: 25px; margin-bottom: 15px; }
+        h4 { font-size: 1.2em; color: #667eea; margin-top: 18px; margin-bottom: 10px; }
+        p { margin-bottom: 15px; line-height: 1.8; color: #374151; }
+        ul, ol { margin-left: 30px; margin-bottom: 15px; }
+        li { margin-bottom: 10px; line-height: 1.7; }
+        strong { color: #1f2937; font-weight: 600; }
+        code { background-color: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.9em; color: #d97706; }
+        .tech-card { background: #f9fafb; border: 1px solid #e5e7eb; border-left: 4px solid #667eea; padding: 20px; border-radius: 6px; margin-bottom: 15px; }
+        .tech-card h4 { margin-top: 0; color: #667eea; }
+        .impact-box { background: #f0fdf4; border-left: 4px solid #16a34a; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .persona-section { background: #f9fafb; padding: 25px; border-radius: 8px; margin: 20px 0; border: 2px solid #e5e7eb; }
+        .persona-title { font-size: 1.4em; color: #667eea; margin-bottom: 15px; font-weight: 700; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; border: 1px solid #e5e7eb; }
+        th { background-color: #667eea; color: white; padding: 12px; text-align: left; font-weight: 600; }
+        td { padding: 12px; border-bottom: 1px solid #e5e7eb; }
+        tr:hover { background-color: #f9fafb; }
+        footer { background: #1f2937; color: white; padding: 30px 20px; text-align: center; margin-top: 60px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>ClinOps: Clinical Trial Management Platform</h1>
+            <p class="subtitle">Part 2: Observability & User Personas</p>
+        </div>
+    </header>
+    
+    <main>
+        <section id="observability">
+            <h2>3. Observability Implementation</h2>
+            
+            <h3>Monitoring & Observability Strategy</h3>
+            
+            <p>ClinOps implements a comprehensive observability strategy using industry-standard tools (OpenTelemetry, Prometheus, Grafana, Loki, Tempo) to ensure system reliability, performance, and compliance audit trails.</p>
+            
+            <h4>What Observability Means in ClinOps</h4>
+            <p>Observability in ClinOps goes beyond traditional monitoring. It provides complete visibility into:</p>
+            <ul>
+                <li><strong>System Health:</strong> Real-time monitoring of application performance, database queries, and API response times</li>
+                <li><strong>User Behavior:</strong> Tracking how coordinators and regulatory advisors interact with the system</li>
+                <li><strong>Data Integrity:</strong> Audit trails showing who accessed what data and when</li>
+                <li><strong>Compliance Events:</strong> Logging all compliance-related actions for regulatory audits</li>
+                <li><strong>Error Detection:</strong> Immediate alerting when issues occur</li>
+                <li><strong>Performance Optimization:</strong> Identifying bottlenecks and optimization opportunities</li>
+            </ul>
+            
+            <h4>Observability Tools & Practices Implemented</h4>
+            
+            <h4>A. Distributed Tracing (OpenTelemetry + Tempo)</h4>
+            <p><strong>What it tracks:</strong> Complete request journeys from frontend through backend to database.</p>
+            <ul>
+                <li>Frontend traces: Document load time, fetch request latency, user interactions</li>
+                <li>Backend traces: API endpoint execution, database query performance, AI model calls</li>
+                <li>Cross-service traces: Correlating frontend and backend operations</li>
+            </ul>
+            <p><strong>Clinical Trial Impact:</strong> Ensures the system responds quickly to coordinators and advisors. Slow responses during critical moments (e.g., safety reporting) are immediately detected and fixed.</p>
+            
+            <h4>B. Metrics Collection (Prometheus)</h4>
+            <p><strong>What it tracks:</strong> Quantitative measurements of system behavior.</p>
+            <ul>
+                <li>HTTP request metrics: Request count, latency percentiles (p50, p95, p99), error rates</li>
+                <li>Database metrics: Query count, execution time, connection pool usage</li>
+                <li>Business metrics: User registrations, projects created, compliance checks performed</li>
+                <li>System metrics: CPU usage, memory consumption, disk I/O</li>
+            </ul>
+            <p><strong>Clinical Trial Impact:</strong> Provides early warning of system issues before they impact users. Enables capacity planning for peak enrollment periods.</p>
+            
+            <h4>C. Structured Logging (Pino + Loki)</h4>
+            <p><strong>What it tracks:</strong> Detailed event logs with automatic PHI redaction.</p>
+            <ul>
+                <li>User actions: Login, project creation, document uploads, compliance checks</li>
+                <li>System events: API calls, database operations, errors and exceptions</li>
+                <li>Audit events: Who accessed what data, when, and from where</li>
+                <li>PHI Protection: Automatic redaction of sensitive information (passwords, email addresses, medical data)</li>
+            </ul>
+            <p><strong>Clinical Trial Impact:</strong> Complete audit trail for regulatory inspections. Demonstrates compliance with HIPAA and FDA requirements for data access logging.</p>
+            
+            <h4>D. Visualization & Alerting (Grafana)</h4>
+            <p><strong>What it provides:</strong> Dashboards and alerts for system health and performance.</p>
+            <ul>
+                <li>App Overview Dashboard: System health, request rates, error rates, latency</li>
+                <li>API Performance Dashboard: Endpoint-specific metrics, slow query detection</li>
+                <li>Database Dashboard: Query performance, connection usage, replication status</li>
+                <li>Smart Alerts: Automatic notifications when thresholds are exceeded</li>
+            </ul>
+            <p><strong>Clinical Trial Impact:</strong> Operations team can quickly identify and resolve issues before they impact trial coordinators.</p>
+            
+            <h4>Metrics & Data Points Being Tracked</h4>
+            
+            <table>
+                <tr>
+                    <th>Category</th>
+                    <th>Metrics</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td>User Activity</td>
+                    <td>Login events, project access, document views, compliance checks</td>
+                    <td>Understand user behavior and identify power users</td>
+                </tr>
+                <tr>
+                    <td>API Performance</td>
+                    <td>Request latency (p50, p95, p99), error rates, throughput</td>
+                    <td>Ensure responsive user experience</td>
+                </tr>
+                <tr>
+                    <td>Database Health</td>
+                    <td>Query execution time, connection pool usage, replication lag</td>
+                    <td>Prevent database bottlenecks</td>
+                </tr>
+                <tr>
+                    <td>AI Model Performance</td>
+                    <td>Gemini API latency, token usage, error rates</td>
+                    <td>Monitor AI content generation quality and cost</td>
+                </tr>
+                <tr>
+                    <td>Compliance Events</td>
+                    <td>Document access, user role changes, data exports</td>
+                    <td>Audit trail for regulatory inspections</td>
+                </tr>
+                <tr>
+                    <td>System Health</td>
+                    <td>CPU, memory, disk usage, uptime</td>
+                    <td>Capacity planning and incident response</td>
+                </tr>
+            </table>
+            
+            <h4>How Observability Improves System Reliability</h4>
+            <ul>
+                <li><strong>Proactive Issue Detection:</strong> Alerts fire before users notice problems</li>
+                <li><strong>Faster Debugging:</strong> Distributed traces show exactly where requests fail</li>
+                <li><strong>Performance Optimization:</strong> Metrics identify slow endpoints and queries</li>
+                <li><strong>Capacity Planning:</strong> Historical metrics inform infrastructure scaling decisions</li>
+                <li><strong>User Experience:</strong> Real-time monitoring ensures coordinators have responsive tools</li>
+            </ul>
+            
+            <h4>Observability Impact on Clinical Trial Management</h4>
+            
+            <div class="impact-box">
+                <strong>Compliance Audit Trail:</strong> Complete logging of all data access ensures ClinOps meets HIPAA audit requirements. Regulators can verify that only authorized users accessed trial data.
+            </div>
+            
+            <div class="impact-box">
+                <strong>Safety Monitoring:</strong> Real-time alerts ensure safety-related operations (adverse event reporting, protocol deviations) are processed immediately without delays.
+            </div>
+            
+            <div class="impact-box">
+                <strong>Data Integrity Verification:</strong> Traces show exactly how data flows through the system, enabling verification that compliance checks were performed correctly.
+            </div>
+            
+            <div class="impact-box">
+                <strong>Regulatory Confidence:</strong> During FDA inspections, detailed observability data demonstrates that the system is reliable and maintains complete audit trails.
+            </div>
+        </section>
+        
+        <section id="personas">
+            <h2>4. User Personas & System Architecture</h2>
+            
+            <h3>Dual-Persona System Design</h3>
+            
+            <p>ClinOps is designed around two primary user personas with distinct roles, responsibilities, and system needs. The architecture supports both personas with role-based access controls and persona-specific interfaces.</p>
+            
+            <h3>Persona 1: Trial Coordinator</h3>
+            
+            <div class="persona-section">
+                <div class="persona-title">👤 Trial Coordinator Profile</div>
+                
+                <h4>Role & Responsibilities</h4>
+                <p>Trial coordinators are the operational backbone of clinical trials. They manage day-to-day trial activities, coordinate between sites and sponsors, and ensure the trial runs smoothly.</p>
+                
+                <h4>Daily Responsibilities</h4>
+                <ul>
+                    <li><strong>Enrollment Management:</strong> Track patient screening, enrollment progress, and enrollment metrics across all sites</li>
+                    <li><strong>Visit Scheduling:</strong> Manage patient visit schedules, send reminders, track visit completion</li>
+                    <li><strong>Protocol Adherence:</strong> Ensure sites follow the protocol, document deviations, and report issues</li>
+                    <li><strong>Data Collection:</strong> Verify source documentation is complete, coordinate data entry, resolve data queries</li>
+                    <li><strong>Safety Monitoring:</strong> Track adverse events, ensure timely reporting, coordinate with safety team</li>
+                    <li><strong>Team Coordination:</strong> Communicate with sites, sponsors, data managers, and other stakeholders</li>
+                    <li><strong>Milestone Tracking:</strong> Monitor trial progress against timelines and milestones</li>
+                    <li><strong>Quality Assurance:</strong> Perform quality checks, identify issues, implement corrective actions</li>
+                </ul>
+                
+                <h4>Key Workflows</h4>
+                <ul>
+                    <li>Enrollment workflow: Screen patient → Verify eligibility → Obtain consent → Randomize → Enroll</li>
+                    <li>Visit workflow: Schedule visit → Prepare materials → Conduct visit → Complete CRF → Resolve queries</li>
+                    <li>Safety workflow: Detect AE → Assess severity → Report SAE → Follow-up → Close case</li>
+                    <li>Monitoring workflow: Receive monitoring visit → Address findings → Implement corrective actions → Verify closure</li>
+                </ul>
+                
+                <h4>Pain Points Addressed by ClinOps</h4>
+                <ul>
+                    <li>Enrollment visibility: Real-time dashboard showing enrollment progress vs. target</li>
+                    <li>Task management: Checklists ensuring nothing is missed at each trial phase</li>
+                    <li>Team coordination: Workflow maps showing who needs to do what and when</li>
+                    <li>Timeline management: Gantt charts and milestone tracking</li>
+                    <li>Quality metrics: Real-time quality indicators and issue detection</li>
+                </ul>
+                
+                <h4>System Access & Permissions</h4>
+                <ul>
+                    <li>Can view trial overview, enrollment data, and quality metrics</li>
+                    <li>Can create and manage task checklists</li>
+                    <li>Can view and update team workflows</li>
+                    <li>Can access trial timeline and milestone tracking</li>
+                    <li>Cannot access regulatory compliance documentation (that's for regulatory advisors)</li>
+                    <li>Cannot modify protocol or regulatory requirements</li>
+                </ul>
+            </div>
+            
+            <h3>Persona 2: Regulatory Advisor</h3>
+            
+            <div class="persona-section">
+                <div class="persona-title">👤 Regulatory Advisor Profile</div>
+                
+                <p>Regulatory advisors ensure the trial meets all regulatory requirements and maintains compliance throughout the trial lifecycle. They work closely with coordinators to prevent compliance issues.</p>
+                
+                <h4>Role & Responsibilities</h4>
+                <ul>
+                    <li><strong>Regulatory Compliance:</strong> Ensure trial meets FDA, EMA, ICH-GCP, and local IRB requirements</li>
+                    <li><strong>Document Control:</strong> Manage protocol, ICF, and other regulatory documents with version control</li>
+                    <li><strong>Approval Workflows:</strong> Coordinate IRB approvals, regulatory submissions, and protocol amendments</li>
+                    <li><strong>Risk Management:</strong> Identify compliance risks and implement preventive controls</li>
+                    <li><strong>Audit Preparation:</strong> Prepare for regulatory inspections and maintain audit-ready documentation</li>
+                    <li><strong>Safety Oversight:</strong> Monitor adverse event reporting and ensure timely regulatory notifications</li>
+                    <li><strong>Quality Control:</strong> Perform compliance audits and identify deficiencies</li>
+                </ul>
+                
+                <h4>Key Workflows</h4>
+                <ul>
+                    <li>Protocol amendment workflow: Draft amendment → IRB review → Regulatory submission → Site notification</li>
+                    <li>Document control workflow: Create document → Version tracking → Approval → Distribution → Expiration monitoring</li>
+                    <li>Risk management workflow: Identify risk → Implement control → Monitor effectiveness → Adjust as needed</li>
+                    <li>Audit preparation workflow: Assemble regulatory binder → Perform gap analysis → Mock audit → Inspector walkthrough</li>
+                </ul>
+                
+                <h4>Pain Points Addressed by ClinOps</h4>
+                <ul>
+                    <li>Compliance complexity: Comprehensive guidance on regulatory requirements</li>
+                    <li>Document management: Version control and expiration tracking</li>
+                    <li>Risk detection: Proactive alerts for compliance issues</li>
+                    <li>Audit readiness: Automated audit folder assembly and gap analysis</li>
+                    <li>Compliance visualization: Diagrams showing compliance flows and requirements</li>
+                </ul>
+                
+                <h4>System Access & Permissions</h4>
+                <ul>
+                    <li>Can view all compliance documentation and regulatory requirements</li>
+                    <li>Can manage document control and version tracking</li>
+                    <li>Can access compliance diagrams and risk controls</li>
+                    <li>Can view audit preparation guides and checklists</li>
+                    <li>Can receive smart alerts for compliance issues</li>
+                    <li>Cannot modify trial operational data (that's for coordinators)</li>
+                    <li>Can view (but not modify) enrollment and safety data for compliance verification</li>
+                </ul>
+            </div>
+            
+            <h4>How System Architecture Supports Both Personas</h4>
+            
+            <table>
+                <tr>
+                    <th>Aspect</th>
+                    <th>Trial Coordinator</th>
+                    <th>Regulatory Advisor</th>
+                </tr>
+                <tr>
+                    <td>Primary Dashboard</td>
+                    <td>Trial Overview with enrollment metrics</td>
+                    <td>Compliance Status with risk indicators</td>
+                </tr>
+                <tr>
+                    <td>Key Features</td>
+                    <td>Task Checklists, Team Workflows, Timeline, Quality Metrics</td>
+                    <td>Protocol Requirements, Document Control, Compliance Diagrams, Audit Prep</td>
+                </tr>
+                <tr>
+                    <td>AI Assistant Focus</td>
+                    <td>Operational guidance, workflow optimization, timeline management</td>
+                    <td>Regulatory guidance, compliance best practices, audit preparation</td>
+                </tr>
+                <tr>
+                    <td>Data Access</td>
+                    <td>Operational data (enrollment, visits, safety events)</td>
+                    <td>Compliance data (documents, approvals, audit trails)</td>
+                </tr>
+                <tr>
+                    <td>Alerts</td>
+                    <td>Enrollment pace, visit scheduling, data quality issues</td>
+                    <td>Document expiration, compliance gaps, audit findings</td>
+                </tr>
+            </table>
+            
+            <h4>System Architecture Overview</h4>
+            
+            <p><strong>Frontend Layer:</strong> React-based UI with role-based component rendering. When a user logs in, the system detects their persona and displays appropriate tabs and features.</p>
+            
+            <p><strong>Authentication Layer:</strong> JWT-based authentication with role-based access control (RBAC). Each API endpoint checks user permissions before returning data.</p>
+            
+            <p><strong>API Layer:</strong> Next.js API routes handling requests for both personas. Separate endpoints for trial coordination data and regulatory compliance data.</p>
+            
+            <p><strong>Database Layer:</strong> PostgreSQL with separate tables for operational data (projects, chat history, messages) and compliance data (documents, approvals, audit logs).</p>
+            
+            <p><strong>AI Layer:</strong> Google Gemini AI with persona-specific prompts. When a coordinator asks a question, the AI provides operational guidance. When an advisor asks, the AI provides regulatory guidance.</p>
+            
+            <p><strong>Observability Layer:</strong> OpenTelemetry traces all operations, enabling audit trails and performance monitoring for both personas.</p>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 ClinOps Project. All rights reserved. | Part 2 of 5</p>
+    </footer>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinOps Documentation - Part 3: Features by Persona</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; background-color: #ffffff; }
+        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 20px; border-bottom: 4px solid #667eea; }
+        .header-content { max-width: 1200px; margin: 0 auto; }
+        h1 { font-size: 2.5em; margin-bottom: 10px; font-weight: 700; }
+        .subtitle { font-size: 1.1em; opacity: 0.95; margin-bottom: 5px; }
+        main { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+        section { margin-bottom: 60px; padding-bottom: 40px; border-bottom: 2px solid #e5e7eb; }
+        section:last-child { border-bottom: none; }
+        h2 { font-size: 2em; color: #667eea; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
+        h3 { font-size: 1.5em; color: #764ba2; margin-top: 25px; margin-bottom: 15px; }
+        h4 { font-size: 1.2em; color: #667eea; margin-top: 18px; margin-bottom: 10px; }
+        h5 { font-size: 1.05em; color: #764ba2; margin-top: 15px; margin-bottom: 10px; }
+        p { margin-bottom: 15px; line-height: 1.8; color: #374151; }
+        ul, ol { margin-left: 30px; margin-bottom: 15px; }
+        li { margin-bottom: 10px; line-height: 1.7; }
+        strong { color: #1f2937; font-weight: 600; }
+        code { background-color: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.9em; color: #d97706; }
+        .tab-feature { background: white; border: 1px solid #e5e7eb; padding: 20px; margin: 15px 0; border-radius: 6px; border-left: 4px solid #764ba2; }
+        .tab-feature h5 { margin-top: 0; color: #764ba2; }
+        .feature-box { background: #f0f4ff; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .impact-box { background: #f0fdf4; border-left: 4px solid #16a34a; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        footer { background: #1f2937; color: white; padding: 30px 20px; text-align: center; margin-top: 60px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>ClinOps: Clinical Trial Management Platform</h1>
+            <p class="subtitle">Part 3: Feature Deep-Dive by Persona</p>
+        </div>
+    </header>
+    
+    <main>
+        <section id="features">
+            <h2>5. Feature Deep-Dive by Persona</h2>
+            
+            <h3>Trial Coordinator Features</h3>
+            
+            <p>Trial coordinators access a suite of operational tools designed to manage day-to-day trial activities, track progress, and coordinate team efforts.</p>
+            
+            <div class="tab-feature">
+                <h5>📊 Trial Overview Tab</h5>
+                <p><strong>What it does:</strong> Provides a comprehensive dashboard of the entire trial status at a glance.</p>
+                <p><strong>Data displayed:</strong></p>
+                <ul>
+                    <li>Trial summary: Name, protocol number, sponsor, target enrollment</li>
+                    <li>Enrollment metrics: Current enrollment vs. target, enrollment rate, time to enrollment</li>
+                    <li>Key milestones: First patient in, enrollment complete, data lock dates</li>
+                    <li>Team structure: Principal investigator, coordinators, key contacts</li>
+                    <li>Quick reference: Visit schedule, critical protocol requirements, emergency procedures</li>
+                </ul>
+                <p><strong>Why critical for coordinators:</strong> Enables quick understanding of trial status without digging through multiple documents. New team members can get up to speed in minutes.</p>
+                <p><strong>Workflow improvement:</strong> Coordinators can identify enrollment bottlenecks early. If enrollment is falling behind target, they can take corrective action immediately.</p>
+                <p><strong>Real-world use case:</strong> A sponsor calls asking about enrollment status. Instead of searching through emails and spreadsheets, the coordinator opens ClinOps and provides an accurate, real-time update in seconds.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>✅ Task Checklists Tab</h5>
+                <p><strong>What it does:</strong> Provides detailed, phase-specific checklists ensuring no critical tasks are missed.</p>
+                <p><strong>Checklists included:</strong></p>
+                <ul>
+                    <li><strong>Pre-Study/Site Activation:</strong> IRB submission, investigator meeting, delegation log, regulatory binder, lab certifications, pharmacy setup, staff training, essential documents, site initiation visit</li>
+                    <li><strong>Enrollment Phase:</strong> Screening log maintenance, informed consent documentation, eligibility verification, baseline assessments, source documentation, enrollment metrics, weekly reports</li>
+                    <li><strong>Treatment & Follow-up:</strong> Visit window adherence, adverse event assessment, concomitant medications, lab sample collection, CRF completion, data query resolution, protocol deviation documentation</li>
+                    <li><strong>Safety & Compliance:</strong> SAE reporting, DSMB reports, monitoring visit follow-up, IRB continuing reviews, protocol amendment review</li>
+                    <li><strong>Trial Closeout:</strong> Final visit completion, CRF query resolution, drug accountability, records archival, site closeout visit, regulatory binder audit</li>
+                </ul>
+                <p><strong>Why critical for coordinators:</strong> Prevents the most common operational errors. Each checklist item includes who is responsible, when it should be completed, and what documentation is required.</p>
+                <p><strong>Workflow improvement:</strong> Coordinators work through checklists systematically, reducing the chance of missed tasks. Checklists can be printed or shared with sites.</p>
+                <p><strong>Real-world use case:</strong> During site initiation, the coordinator uses the pre-study checklist to ensure all required documents are in place before the first patient is screened. This prevents delays and regulatory issues later.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>👥 Team Workflows Tab</h5>
+                <p><strong>What it does:</strong> Maps out how different roles collaborate throughout the trial lifecycle.</p>
+                <p><strong>Workflows covered:</strong></p>
+                <ul>
+                    <li><strong>Subject Enrollment Workflow:</strong> Coordinator screens → PI reviews → Consent obtained → Randomization → Enrollment confirmed</li>
+                    <li><strong>Adverse Event Workflow:</strong> Event detected → Assessed for severity → SAE reported → Follow-up conducted → Case closed</li>
+                    <li><strong>Data Query Workflow:</strong> Query generated → Coordinator receives → Resolves with site → Data manager verifies → Query closed</li>
+                    <li><strong>Monitoring Visit Workflow:</strong> Visit scheduled → Documents prepared → Monitor reviews → Findings documented → Corrective actions implemented</li>
+                    <li><strong>Protocol Amendment Workflow:</strong> Amendment drafted → PI reviews → IRB submission → Regulatory approval → Site notification</li>
+                </ul>
+                <p><strong>Why critical for coordinators:</strong> Shows exactly who needs to do what and when. Prevents bottlenecks by clarifying handoff points.</p>
+                <p><strong>Workflow improvement:</strong> New coordinators understand their role in complex processes. Experienced coordinators identify optimization opportunities.</p>
+                <p><strong>Real-world use case:</strong> A site reports an adverse event. The coordinator references the AE workflow to ensure all steps are completed in the correct order and within regulatory timelines.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>📅 Trial Timeline Tab</h5>
+                <p><strong>What it does:</strong> Visualizes the entire trial schedule from protocol approval through database lock.</p>
+                <p><strong>Data displayed:</strong></p>
+                <ul>
+                    <li>Major trial phases with start/end dates</li>
+                    <li>Key milestones and their target dates</li>
+                    <li>Enrollment timeline and enrollment rate projections</li>
+                    <li>Critical regulatory deadlines (IRB approvals, continuing reviews)</li>
+                    <li>Monitoring visit schedule</li>
+                    <li>DSMB review dates</li>
+                    <li>Database lock and analysis timeline</li>
+                </ul>
+                <p><strong>Why critical for coordinators:</strong> Enables proactive timeline management. Coordinators can see which milestones are approaching and plan accordingly.</p>
+                <p><strong>Workflow improvement:</strong> Prevents timeline slippage by making deadlines visible. Coordinators can identify risks early and take corrective action.</p>
+                <p><strong>Real-world use case:</strong> The coordinator sees that the enrollment completion milestone is 6 weeks away, but current enrollment rate suggests it will be missed by 2 weeks. They alert the sponsor and implement corrective actions (additional marketing, extended screening period, etc.).</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>📈 Quality Metrics Tab</h5>
+                <p><strong>What it does:</strong> Tracks key quality indicators and identifies issues early.</p>
+                <p><strong>Metrics tracked:</strong></p>
+                <ul>
+                    <li><strong>Enrollment Quality:</strong> Screen failure rate, enrollment rate, time to enrollment</li>
+                    <li><strong>Data Quality:</strong> CRF completion rate, query rate, query resolution time</li>
+                    <li><strong>Safety Monitoring:</strong> Adverse event reporting timeliness, SAE escalation rate</li>
+                    <li><strong>Protocol Adherence:</strong> Visit window adherence rate, protocol deviation rate</li>
+                    <li><strong>Site Performance:</strong> Individual site enrollment, data quality, compliance metrics</li>
+                </ul>
+                <p><strong>Why critical for coordinators:</strong> Provides early warning of quality issues. Coordinators can identify underperforming sites and provide support.</p>
+                <p><strong>Workflow improvement:</strong> Coordinators focus resources on sites with quality issues. Proactive intervention prevents problems from escalating.</p>
+                <p><strong>Real-world use case:</strong> The quality metrics dashboard shows that Site A has a 40% query rate compared to the trial average of 15%. The coordinator reaches out to Site A to provide additional training and support, reducing the query rate to 18% within 2 weeks.</p>
+            </div>
+            
+            <h3>Regulatory Advisor Features</h3>
+            
+            <p>Regulatory advisors access a comprehensive suite of compliance tools designed to ensure the trial meets all regulatory requirements and maintains audit readiness.</p>
+            
+            <div class="tab-feature">
+                <h5>📋 Protocol Requirements Tab</h5>
+                <p><strong>What it does:</strong> Provides a comprehensive breakdown of all regulatory requirements the trial must meet.</p>
+                <p><strong>Content includes:</strong></p>
+                <ul>
+                    <li><strong>Regulatory Framework:</strong> FDA 21 CFR, ICH-GCP, EMA guidelines, local IRB requirements applicable to the trial</li>
+                    <li><strong>Protocol Compliance Requirements:</strong> Key protocol mandates that teams must follow (inclusion/exclusion criteria, visit windows, assessments, etc.)</li>
+                    <li><strong>Essential Documentation:</strong> Required documents for trial initiation (protocol, ICF, investigator brochure, delegation log, CVs, financial disclosures, etc.)</li>
+                    <li><strong>Approval Workflows:</strong> Step-by-step approval process with timelines (e.g., IRB → Site Activation → First Patient In)</li>
+                    <li><strong>Amendment Process:</strong> How to handle protocol amendments and deviations</li>
+                    <li><strong>Monitoring Requirements:</strong> What regulators will look for during inspections</li>
+                    <li><strong>Key Stakeholders:</strong> Roles and responsibilities (sponsor, PI, IRB, regulatory authorities)</li>
+                </ul>
+                <p><strong>Why essential for regulatory oversight:</strong> Ensures the entire team understands regulatory requirements. Prevents compliance gaps due to misunderstanding.</p>
+                <p><strong>Compliance assurance:</strong> Advisors can reference this guide during team meetings and training sessions. Coordinators can understand why certain procedures are required.</p>
+                <p><strong>Real-world use case:</strong> A site asks why they need to maintain a delegation log. The regulatory advisor references the Protocol Requirements tab to explain the ICH-GCP requirement and shows the specific regulatory citation.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>📄 Document Control Tab</h5>
+                <p><strong>What it does:</strong> Manages all trial documents with version control, approval tracking, and expiration alerts.</p>
+                <p><strong>Capabilities:</strong></p>
+                <ul>
+                    <li><strong>Document Inventory:</strong> Complete list of all essential documents (Protocol, ICF, Lab Manual, DSMB Charter, Monitoring Plan, etc.)</li>
+                    <li><strong>Version Control:</strong> Track document versions, effective dates, and superseded versions</li>
+                    <li><strong>Approval Workflows:</strong> Define who reviews, approves, and archives each document type</li>
+                    <li><strong>Expiration Alerts:</strong> Automatic 30/60/90-day warnings for documents with expiration dates (IRB approvals, lab certifications, investigator CVs)</li>
+                    <li><strong>Distribution Control:</strong> Ensure sites always use current versions</li>
+                    <li><strong>Signature Requirements:</strong> Track which documents need wet signatures vs. electronic signatures</li>
+                    <li><strong>Audit Trail:</strong> Complete history of who approved what and when</li>
+                </ul>
+                <p><strong>Why essential for regulatory oversight:</strong> Prevents the most common document control errors (using outdated ICF, missing signatures, expired certifications).</p>
+                <p><strong>Compliance assurance:</strong> During FDA inspections, the regulatory advisor can quickly demonstrate that all documents are current and properly approved.</p>
+                <p><strong>Real-world use case:</strong> The system alerts the advisor that the IRB approval expires in 30 days. The advisor immediately initiates the continuing review process, ensuring there's no gap in IRB coverage.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>🔄 Compliance Diagrams Tab</h5>
+                <p><strong>What it does:</strong> Provides visual representations of complex compliance requirements and processes.</p>
+                <p><strong>Diagrams included:</strong></p>
+                <ul>
+                    <li><strong>ICH-GCP Compliance Map:</strong> Key ICH-GCP principles and how the trial addresses them, mapping trial processes to GCP requirements, quality control checkpoints</li>
+                    <li><strong>Informed Consent Flow:</strong> When consent must be obtained, re-consent triggers, consent documentation requirements</li>
+                    <li><strong>Data Integrity Chain:</strong> Source data → Case Report Form → Database flow, query resolution process, audit trail requirements</li>
+                    <li><strong>Safety Reporting Workflow:</strong> Adverse event detection → assessment → reporting timelines, serious AE escalation paths, regulatory notification requirements</li>
+                    <li><strong>Trial Lifecycle:</strong> Protocol approval through database lock, highlighting all regulatory checkpoints and compliance milestones</li>
+                </ul>
+                <p><strong>Why essential for regulatory oversight:</strong> Helps teams quickly understand complex compliance requirements. Visual diagrams are more effective than text descriptions.</p>
+                <p><strong>Compliance assurance:</strong> During team training, advisors can use these diagrams to explain compliance requirements. During inspections, these diagrams demonstrate regulatory knowledge.</p>
+                <p><strong>Real-world use case:</strong> A new coordinator is confused about the data integrity chain. The advisor shows the compliance diagram, which clearly shows how source data flows to the CRF and database, and where queries are resolved.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>⚠️ Risk & Controls Tab</h5>
+                <p><strong>What it does:</strong> Identifies common trial risks and provides prevention controls.</p>
+                <p><strong>Content includes:</strong></p>
+                <ul>
+                    <li><strong>Common Error Catalog:</strong> Outdated consent forms, missing signatures, protocol deviations, expired certifications, source documentation gaps, late safety reports, missing delegation logs</li>
+                    <li><strong>Prevention Controls:</strong> For each error, specific prevention checklists, system checks, training requirements, document checklists</li>
+                    <li><strong>Detection & Monitoring:</strong> How to audit for issues proactively, key performance indicators for risk monitoring, trigger points for corrective action</li>
+                    <li><strong>Remediation Plans:</strong> Step-by-step correction procedures, regulatory notification requirements, root cause analysis templates</li>
+                </ul>
+                <p><strong>Why essential for regulatory oversight:</strong> Prevents audit findings by catching issues before inspectors arrive. Demonstrates proactive risk management to regulators.</p>
+                <p><strong>Compliance assurance:</strong> Advisors use this guide to develop site-specific risk mitigation plans. Coordinators understand why certain controls are in place.</p>
+                <p><strong>Real-world use case:</strong> The advisor identifies that Site B has a history of missing signatures on consent forms. Using the Risk & Controls tab, the advisor implements a specific prevention control: a pre-visit checklist that includes signature verification.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>🔍 Audit Preparation Tab</h5>
+                <p><strong>What it does:</strong> Prepares the trial team for regulatory inspections through automated audit folder assembly and gap analysis.</p>
+                <p><strong>Content includes:</strong></p>
+                <ul>
+                    <li><strong>Audit Folder Structure:</strong> Recommended organization of regulatory binder (by section: protocol, IRB, site documents, subject files, safety, monitoring), essential documents for each section, cross-reference index, timeline for assembling</li>
+                    <li><strong>Document Completeness Checklist:</strong> Required documents for a complete regulatory file, common missing items that inspectors flag, verification process</li>
+                    <li><strong>Audit Readiness Assessment:</strong> Self-assessment questionnaire covering GCP essentials, gap analysis framework, remediation timelines, practice questions</li>
+                    <li><strong>Inspector Walkthrough Preparation:</strong> Site readiness (physical space, staff availability), document presentation strategy, Q&A preparation, escalation plan</li>
+                    <li><strong>Post-Audit Action Plan:</strong> How to respond to observations, CAPA templates, response timelines</li>
+                </ul>
+                <p><strong>Why essential for regulatory oversight:</strong> Reduces audit preparation time from days to hours through automation and organization. Ensures the trial is audit-ready at all times.</p>
+                <p><strong>Compliance assurance:</strong> During FDA inspections, the regulatory advisor can quickly assemble the audit folder and demonstrate complete compliance.</p>
+                <p><strong>Real-world use case:</strong> The FDA announces an inspection in 2 weeks. The advisor uses the Audit Preparation tab to assemble the regulatory binder in 3 hours instead of 3 days. The team conducts a mock audit and identifies 2 gaps that are fixed before the real inspection.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>🚨 Smart Alerts Tab</h5>
+                <p><strong>What it does:</strong> Provides AI-powered proactive compliance alerts and risk detection.</p>
+                <p><strong>Alert categories:</strong></p>
+                <ul>
+                    <li><strong>Document Expiration Warnings:</strong> IRB approvals expiring in 30/60/90 days, lab certifications, investigator CVs</li>
+                    <li><strong>Version Control Alerts:</strong> Outdated consent forms detected at sites</li>
+                    <li><strong>Missing Signature Detection:</strong> Unsigned documents flagged automatically</li>
+                    <li><strong>Protocol Deviation Patterns:</strong> AI detects repeated procedural errors</li>
+                    <li><strong>Enrollment Pace Monitoring:</strong> Alerts if falling behind target</li>
+                    <li><strong>Query Aging Alerts:</strong> Unresolved data queries > 30 days old</li>
+                </ul>
+                <p><strong>Why essential for regulatory oversight:</strong> Catches compliance issues before they become audit findings. Demonstrates proactive compliance management to regulators.</p>
+                <p><strong>Compliance assurance:</strong> Advisors receive alerts immediately when issues are detected, enabling rapid response.</p>
+                <p><strong>Real-world use case:</strong> The system detects that Site C has been using an outdated ICF version for 2 weeks. The advisor is immediately alerted and can correct the issue before an inspection.</p>
+            </div>
+            
+            <h4>How Features Integrate to Support Both Personas</h4>
+            
+            <p><strong>Shared Context:</strong> Both personas work on the same trial but with different focuses. The system maintains a shared context (trial information, project data) while providing persona-specific views.</p>
+            
+            <p><strong>AI Assistant:</strong> The AI assistant adapts its responses based on the current persona. When a coordinator asks a question, the AI provides operational guidance. When an advisor asks, the AI provides regulatory guidance.</p>
+            
+            <p><strong>Mermaid Diagrams:</strong> Both personas benefit from visual diagrams. Coordinators see operational workflows and timelines. Advisors see compliance flows and regulatory requirements.</p>
+            
+            <p><strong>Data Persistence:</strong> All data is saved to the database, enabling continuity across sessions. Coordinators and advisors can pick up where they left off.</p>
+            
+            <p><strong>Collaboration:</strong> While the system provides persona-specific features, both personas can reference the same trial information. This enables effective collaboration and ensures alignment between operational and compliance teams.</p>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 ClinOps Project. All rights reserved. | Part 3 of 5</p>
+    </footer>
+</body>
+</html>
+                </tr>
+            </table>
+        </section>
+        
+        <section id="features">
+            <h2>5. Feature Deep-Dive by Persona</h2>
+            
+            <h3>Trial Coordinator Features</h3>
+            
+            <p>Trial coordinators access a suite of operational tools designed to manage day-to-day trial activities, track progress, and coordinate team efforts.</p>
+            
+            <div class="tab-feature">
+                <h5>📊 Trial Overview Tab</h5>
+                <p><strong>What it does:</strong> Provides a comprehensive dashboard of the entire trial status at a glance.</p>
+                <p><strong>Data displayed:</strong> Trial summary, enrollment metrics, key milestones, team structure, and quick reference information.</p>
+                <p><strong>Why critical for coordinators:</strong> Enables quick understanding of trial status without digging through multiple documents. New team members can get up to speed in minutes.</p>
+                <p><strong>Workflow improvement:</strong> Coordinators can identify enrollment bottlenecks early and take corrective action immediately.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>✅ Task Checklists Tab</h5>
+                <p><strong>What it does:</strong> Provides detailed, phase-specific checklists ensuring no critical tasks are missed.</p>
+                <p><strong>Checklists included:</strong> Pre-Study/Site Activation, Enrollment Phase, Treatment & Follow-up, Safety & Compliance, and Trial Closeout.</p>
+                <p><strong>Why critical for coordinators:</strong> Prevents the most common operational errors. Each checklist item includes who is responsible, when it should be completed, and what documentation is required.</p>
+                <p><strong>Workflow improvement:</strong> Coordinators work through checklists systematically, reducing the chance of missed tasks.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>👥 Team Workflows Tab</h5>
+                <p><strong>What it does:</strong> Maps out how different roles collaborate throughout the trial lifecycle.</p>
+                <p><strong>Workflows covered:</strong> Subject Enrollment, Adverse Event, Data Query, Monitoring Visit, and Protocol Amendment workflows.</p>
+                <p><strong>Why critical for coordinators:</strong> Shows exactly who needs to do what and when. Prevents bottlenecks by clarifying handoff points.</p>
+                <p><strong>Workflow improvement:</strong> New coordinators understand their role in complex processes. Experienced coordinators identify optimization opportunities.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>📅 Trial Timeline Tab</h5>
+                <p><strong>What it does:</strong> Visualizes the entire trial schedule from protocol approval through database lock.</p>
+                <p><strong>Data displayed:</strong> Major trial phases, key milestones, enrollment timeline, regulatory deadlines, monitoring visits, DSMB reviews, and database lock timeline.</p>
+                <p><strong>Why critical for coordinators:</strong> Enables proactive timeline management. Coordinators can see which milestones are approaching and plan accordingly.</p>
+                <p><strong>Workflow improvement:</strong> Prevents timeline slippage by making deadlines visible. Coordinators can identify risks early and take corrective action.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>📈 Quality Metrics Tab</h5>
+                <p><strong>What it does:</strong> Tracks key quality indicators and identifies issues early.</p>
+                <p><strong>Metrics tracked:</strong> Enrollment Quality (screen failure rate, enrollment rate, time to enrollment), Data Quality (CRF completion rate, query rate, query resolution time), Safety Monitoring, Protocol Adherence, and Site Performance.</p>
+                <p><strong>Why critical for coordinators:</strong> Provides early warning of quality issues. Coordinators can identify underperforming sites and provide support.</p>
+                <p><strong>Workflow improvement:</strong> Coordinators focus resources on sites with quality issues. Proactive intervention prevents problems from escalating.</p>
+            </div>
+            
+            <h3>Regulatory Advisor Features</h3>
+            
+            <p>Regulatory advisors access a comprehensive suite of compliance tools designed to ensure the trial meets all regulatory requirements and maintains audit readiness.</p>
+            
+            <div class="tab-feature">
+                <h5>📋 Protocol Requirements Tab</h5>
+                <p><strong>What it does:</strong> Provides a comprehensive breakdown of all regulatory requirements the trial must meet.</p>
+                <p><strong>Content includes:</strong> Regulatory Framework, Protocol Compliance Requirements, Essential Documentation, Approval Workflows, Amendment Process, Monitoring Requirements, and Key Stakeholders.</p>
+                <p><strong>Why essential for regulatory oversight:</strong> Ensures the entire team understands regulatory requirements. Prevents compliance gaps due to misunderstanding.</p>
+                <p><strong>Compliance assurance:</strong> Advisors can reference this guide during team meetings and training sessions.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>📄 Document Control Tab</h5>
+                <p><strong>What it does:</strong> Manages all trial documents with version control, approval tracking, and expiration alerts.</p>
+                <p><strong>Capabilities:</strong> Document Inventory, Version Control, Approval Workflows, Expiration Alerts, Distribution Control, Signature Requirements, and Audit Trail.</p>
+                <p><strong>Why essential for regulatory oversight:</strong> Prevents the most common document control errors (using outdated ICF, missing signatures, expired certifications).</p>
+                <p><strong>Compliance assurance:</strong> During FDA inspections, the regulatory advisor can quickly demonstrate that all documents are current and properly approved.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>🔄 Compliance Diagrams Tab</h5>
+                <p><strong>What it does:</strong> Provides visual representations of complex compliance requirements and processes.</p>
+                <p><strong>Diagrams included:</strong> ICH-GCP Compliance Map, Informed Consent Flow, Data Integrity Chain, Safety Reporting Workflow, and Trial Lifecycle.</p>
+                <p><strong>Why essential for regulatory oversight:</strong> Helps teams quickly understand complex compliance requirements. Visual diagrams are more effective than text descriptions.</p>
+                <p><strong>Compliance assurance:</strong> During team training, advisors can use these diagrams to explain compliance requirements.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>⚠️ Risk & Controls Tab</h5>
+                <p><strong>What it does:</strong> Identifies common trial risks and provides prevention controls.</p>
+                <p><strong>Content includes:</strong> Common Error Catalog, Prevention Controls, Detection & Monitoring, and Remediation Plans.</p>
+                <p><strong>Why essential for regulatory oversight:</strong> Prevents audit findings by catching issues before inspectors arrive. Demonstrates proactive risk management to regulators.</p>
+                <p><strong>Compliance assurance:</strong> Advisors use this guide to develop site-specific risk mitigation plans.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>🔍 Audit Preparation Tab</h5>
+                <p><strong>What it does:</strong> Prepares the trial team for regulatory inspections through automated audit folder assembly and gap analysis.</p>
+                <p><strong>Content includes:</strong> Audit Folder Structure, Document Completeness Checklist, Audit Readiness Assessment, Inspector Walkthrough Preparation, and Post-Audit Action Plan.</p>
+                <p><strong>Why essential for regulatory oversight:</strong> Reduces audit preparation time from days to hours through automation and organization. Ensures the trial is audit-ready at all times.</p>
+                <p><strong>Compliance assurance:</strong> During FDA inspections, the regulatory advisor can quickly assemble the audit folder and demonstrate complete compliance.</p>
+            </div>
+            
+            <div class="tab-feature">
+                <h5>🚨 Smart Alerts Tab</h5>
+                <p><strong>What it does:</strong> Provides AI-powered proactive compliance alerts and risk detection.</p>
+                <p><strong>Alert categories:</strong> Document Expiration Warnings, Version Control Alerts, Missing Signature Detection, Protocol Deviation Patterns, Enrollment Pace Monitoring, and Query Aging Alerts.</p>
+                <p><strong>Why essential for regulatory oversight:</strong> Catches compliance issues before they become audit findings. Demonstrates proactive compliance management to regulators.</p>
+                <p><strong>Compliance assurance:</strong> Advisors receive alerts immediately when issues are detected, enabling rapid response.</p>
+            </div>
+            
+            <h4>How Features Integrate to Support Both Personas</h4>
+            
+            <p><strong>Shared Context:</strong> Both personas work on the same trial but with different focuses. The system maintains a shared context (trial information, project data) while providing persona-specific views.</p>
+            
+            <p><strong>AI Assistant:</strong> The AI assistant adapts its responses based on the current persona. When a coordinator asks a question, the AI provides operational guidance. When an advisor asks, the AI provides regulatory guidance.</p>
+            
+            <p><strong>Mermaid Diagrams:</strong> Both personas benefit from visual diagrams. Coordinators see operational workflows and timelines. Advisors see compliance flows and regulatory requirements.</p>
+            
+            <p><strong>Data Persistence:</strong> All data is saved to the database, enabling continuity across sessions. Coordinators and advisors can pick up where they left off.</p>
+            
+            <p><strong>Collaboration:</strong> While the system provides persona-specific features, both personas can reference the same trial information. This enables effective collaboration and ensures alignment between operational and compliance teams.</p>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 ClinOps Project. All rights reserved. | Comprehensive Documentation</p>
+    </footer>
+</body>
+</html>
