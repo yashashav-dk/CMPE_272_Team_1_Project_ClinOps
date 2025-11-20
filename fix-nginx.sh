@@ -35,36 +35,9 @@ APP_NAME="clinops"
 
 print_info "Fixing Nginx configuration..."
 
-# Determine server name
-print_info "Detecting server IP address..."
-
-# Try EC2 metadata service
-SERVER_NAME=$(curl -s --connect-timeout 2 http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null)
-
-# Fallback to hostname -I
-if [ -z "$SERVER_NAME" ]; then
-    print_info "EC2 metadata not available, trying hostname..."
-    SERVER_NAME=$(hostname -I | awk '{print $1}')
-fi
-
-# Fallback to ip command
-if [ -z "$SERVER_NAME" ]; then
-    print_info "Trying ip command..."
-    SERVER_NAME=$(ip route get 1 | awk '{print $7; exit}')
-fi
-
-# Ultimate fallback
-if [ -z "$SERVER_NAME" ]; then
-    print_warning "Could not auto-detect IP. Please enter your server IP or domain:"
-    read -p "Server name: " SERVER_NAME
-fi
-
-if [ -z "$SERVER_NAME" ]; then
-    print_error "No server name provided. Exiting."
-    exit 1
-fi
-
-print_info "Using server name: $SERVER_NAME"
+# Hardcoded server IP (EC2 public IP)
+SERVER_NAME="54.242.66.82"
+print_info "Using hardcoded server IP: $SERVER_NAME"
 
 # Backup existing config
 if [ -f /etc/nginx/sites-available/${APP_NAME} ]; then
@@ -137,6 +110,15 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header X-Forwarded-Host \$host;
+        
+        # WebSocket support
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # Buffering settings
+        proxy_buffering off;
     }
     
     # Prometheus (Metrics)
