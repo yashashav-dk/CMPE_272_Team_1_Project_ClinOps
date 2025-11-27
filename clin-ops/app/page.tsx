@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import LoadingSpinner from './LoadingSpinner'
 
 type User = { id: string; email: string; name?: string; createdAt: string }
 
@@ -96,6 +97,7 @@ function AuthModeDetector({ setMode }: { setMode: (mode: 'login' | 'register') =
 function HomeContent() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [checkingProjects, setCheckingProjects] = useState(false)
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [showProjectModal, setShowProjectModal] = useState(false)
   const [newProjectName, setNewProjectName] = useState('')
@@ -245,6 +247,8 @@ function HomeContent() {
     // Import any guest projects from localStorage and check if user has projects
     ;(async () => {
       try {
+        setCheckingProjects(true)
+        
         // First, import any guest projects from localStorage
         if (typeof window !== 'undefined') {
           const keys = Object.keys(window.localStorage)
@@ -289,6 +293,8 @@ function HomeContent() {
         }
       } catch (error) {
         console.error('Failed to check projects after login:', error)
+      } finally {
+        setCheckingProjects(false)
       }
     })()
   }
@@ -343,6 +349,17 @@ function HomeContent() {
           </div>
         </div>
       </header>
+
+      {/* Project Checking Loading Overlay */}
+      {checkingProjects && (
+        <div className="fixed inset-0 bg-gray-900/90 backdrop-blur-sm z-50 flex items-center justify-center">
+          <LoadingSpinner 
+            size="lg" 
+            text="Setting up your workspace..." 
+            subtext="Checking your projects"
+          />
+        </div>
+      )}
 
       {/* Hero Section */}
       <main className="flex-1">

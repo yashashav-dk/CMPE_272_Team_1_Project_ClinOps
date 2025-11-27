@@ -8,6 +8,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import MermaidDiagram from './MermaidDiagram'
 import './style.css'
+import LoadingSpinner from './LoadingSpinner'
 import { generateAIResponse } from '@/services/ai-client'
 import { generateTabContent, generateComprehensiveTabContent, Persona, TabType as BaseTabType, getTabDisplayName } from '@/services/llm'
 import { loadChatData, saveChatData, autoSaveChatData, clearChatData, ChatMessage as ChatMessageType } from '@/services/aiChat'
@@ -1627,6 +1628,8 @@ Please provide the updated content that addresses the change request while maint
             </div>
           )}
           
+          {/* Tab Content */}
+          
           {isTabContentLoading && generationStatus !== 'generating' ? (
             <div className="flex justify-center items-center h-40">
               <div className="animate-pulse flex space-x-2">
@@ -1659,6 +1662,21 @@ Please provide the updated content that addresses the change request while maint
   const activeTabClasses = 'bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 text-white shadow-xl border border-indigo-400/60 ';
   const inactiveTabClasses = 'text-gray-300 border border-transparent hover:text-white hover:bg-gray-800/70 hover:border-gray-700 hover:-translate-x-y-0.5';
   const getTabClasses = (tab: TabType) => `${sharedTabBase} ${currentTab === tab ? activeTabClasses : inactiveTabClasses}`;
+
+  // Show loading spinner while initial data is loading
+  if (!isDataLoaded && projectId) {
+    return (
+      <div className="flex h-full bg-gray-50 dark:bg-gray-900">
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingSpinner 
+            size="lg" 
+            text="Loading your project..." 
+            subtext="Preparing your clinical trial workspace"
+          />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="ai-chat-container flex h-full flex-col">
