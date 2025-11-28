@@ -8,14 +8,14 @@ export async function GET(
 ) {
   try {
     const { projectId } = await params;
-    
+
     if (!projectId) {
       return NextResponse.json(
         { success: false, error: 'Project ID is required' },
         { status: 400 }
       );
     }
-    
+
     // Load the most recent chat history for this project
     const chat = await prisma.chatHistory.findFirst({
       where: { projectId },
@@ -75,7 +75,7 @@ export async function GET(
     };
 
     return NextResponse.json({ success: true, data });
-    
+
   } catch (error: unknown) {
     // Create safe error details for logging
     let message = 'Failed to load chat data';
@@ -98,11 +98,11 @@ export async function GET(
     const errorDetails = { message, type, code, name };
 
     console.error('Error loading chat data:', errorDetails);
-    
+
     // Send a more detailed error message back to the client
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: message,
         errorType: type
       },

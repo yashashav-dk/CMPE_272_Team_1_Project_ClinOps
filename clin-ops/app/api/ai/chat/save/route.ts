@@ -10,11 +10,11 @@ export async function POST(request: Request) {
     // For improved robustness, try multiple approaches to get the body
     let body;
     let rawBody;
-    
+
     // First, try to read as text (works better with sendBeacon)
     try {
       rawBody = await request.text();
-      
+
       // Check if body is empty
       if (!rawBody || !rawBody.trim()) {
         console.log('Empty request body received, returning success for beacon requests');
@@ -24,20 +24,20 @@ export async function POST(request: Request) {
           message: 'No data to save'
         }, { status: 200 });
       }
-      
+
       // Try to parse the text as JSON
       body = JSON.parse(rawBody);
     } catch (parseError) {
       console.error('Error parsing request body:', parseError);
       console.log('Raw body:', rawBody?.substring(0, 200));
-      
+
       // Return success for malformed beacon requests to avoid errors
       return NextResponse.json({
         success: true,
         message: 'Could not parse request data'
       }, { status: 200 });
     }
-    
+
     // If we got here with no body, return success
     if (!body) {
       return NextResponse.json({
@@ -45,12 +45,12 @@ export async function POST(request: Request) {
         message: 'No data to save'
       }, { status: 200 });
     }
-    
+
     // Validate we have required fields (if body exists)
     if (!body.projectId || !body.userId) {
-      console.error('Missing required fields:', { 
-        hasProjectId: !!body.projectId, 
-        hasUserId: !!body.userId 
+      console.error('Missing required fields:', {
+        hasProjectId: !!body.projectId,
+        hasUserId: !!body.userId
       });
       return NextResponse.json({
         success: false,
@@ -79,15 +79,15 @@ export async function POST(request: Request) {
       // Only update updatedAt on existing projects, don't overwrite name/description
       await tx.project.upsert({
         where: { id: projectId },
-        update: { 
+        update: {
           // Just update timestamp to track activity, preserve name and description
           updatedAt: new Date()
         },
-        create: { 
-          id: projectId, 
-          userId, 
-          name: `Project ${projectId.slice(-8)}`, 
-          description: 'Created from chat session' 
+        create: {
+          id: projectId,
+          userId,
+          name: `Project ${projectId.slice(-8)}`,
+          description: 'Created from chat session'
         },
       });
 
@@ -185,9 +185,9 @@ export async function POST(request: Request) {
     }
 
     const errorDetails = { message, type, code, name };
-    
+
     console.error('Error saving chat data:', errorDetails);
-    
+
     return NextResponse.json({
       success: false,
       error: message,

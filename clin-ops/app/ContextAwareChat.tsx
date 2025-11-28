@@ -13,6 +13,52 @@ import { generateAIResponse } from '@/services/ai-client'
 import { generateTabContent, generateComprehensiveTabContent, Persona, TabType as BaseTabType, getTabDisplayName } from '@/services/llm'
 import { loadChatData, saveChatData, autoSaveChatData, clearChatData, ChatMessage as ChatMessageType } from '@/services/aiChat'
 
+// Helper function for beacon data saving
+const saveDataBeacon = (
+  projectId: string,
+  userId: string,
+  messages: ChatMessageType[],
+  projectInfo: Record<string, string>,
+  persona: string,
+  currentTab: string,
+  tabContent: Record<string, string>,
+  tabContentGeneration: Record<string, string>
+) => {
+  if (!projectId) return;
+
+  try {
+    const data = JSON.stringify({
+      projectId,
+      userId: userId || 'default-user',
+      messages,
+      projectInfo,
+      persona,
+      currentTab,
+      tabContent,
+      tabContentGeneration
+    });
+
+    const blob = new Blob([data], { type: 'application/json' });
+
+    // Use sendBeacon if available
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/ai/chat/save', blob);
+    } else {
+      // Fallback to fetch with keepalive
+      fetch('/api/ai/chat/save', {
+        method: 'POST',
+        body: data,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        keepalive: true
+      }).catch(err => console.error('Fetch fallback failed:', err));
+    }
+  } catch (error) {
+    console.error('Error in saveDataBeacon:', error);
+  }
+};
+
 // Extend the TabType to include 'general'
 type TabType = BaseTabType | 'general';
 
@@ -70,19 +116,19 @@ const SimpleMarkdownRenderer: React.FC<{ content: string; projectId?: string; co
 
     // More precise regex for Mermaid code blocks that preserves content exactly
     const codeBlockRegex = /```(?:mermaid|diagram)?\s*\n([\s\S]*?)```/g;
-    
+
     let match;
 
     // Find all code blocks that might contain Mermaid diagrams
     while ((match = codeBlockRegex.exec(text)) !== null) {
       const diagramContent = match[1].trim();
-      
+
       // Check if this looks like a Mermaid diagram by checking for known diagram types
       const isMermaidDiagram = /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitgraph|mindmap|timeline|sankey|xychart|quadrantChart|requirement|C4Context|C4Container|C4Component|C4Dynamic|C4Deployment)\b/i.test(diagramContent);
-      
+
       // Also check for common Mermaid patterns (arrows, participants, etc.)
       const hasArrowPatterns = /-->|->|--|\|\||participant\s+|actor\s+|\->>|\-\->>/.test(diagramContent);
-      
+
       if (isMermaidDiagram || hasArrowPatterns) {
         // Add text before the diagram
         if (match.index > lastIndex) {
@@ -94,10 +140,10 @@ const SimpleMarkdownRenderer: React.FC<{ content: string; projectId?: string; co
 
         // Use the diagram content exactly as provided, with minimal cleaning
         let cleanDiagram = diagramContent;
-        
+
         // Only normalize line endings - don't modify the content otherwise
         cleanDiagram = cleanDiagram.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        
+
         // Only add diagram type if it's completely missing and we can detect the intent
         if (!cleanDiagram.match(/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitgraph|mindmap|timeline|sankey|xychart|quadrantChart|requirement|C4Context|C4Container|C4Component|C4Dynamic|C4Deployment)\b/i)) {
           // Try to detect the diagram type from content
@@ -107,7 +153,7 @@ const SimpleMarkdownRenderer: React.FC<{ content: string; projectId?: string; co
             cleanDiagram = `flowchart TD\n${cleanDiagram}`;
           }
         }
-        
+
         parts.push({ type: 'mermaid', content: cleanDiagram });
         lastIndex = match.index + match[0].length;
       }
@@ -117,7 +163,7 @@ const SimpleMarkdownRenderer: React.FC<{ content: string; projectId?: string; co
     if (parts.length === 0) {
       // Look for standalone Mermaid diagrams (not in code blocks)
       const standaloneRegex = /(?:^|\n\n)((?:graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitgraph|mindmap|timeline|sankey|xychart|quadrantChart|requirement|C4Context|C4Container|C4Component|C4Dynamic|C4Deployment)\b[\s\S]*?)(?=\n\n|\n\s*[A-Z][a-z]+:|\n\s*$|$)/gi;
-      
+
       while ((match = standaloneRegex.exec(text)) !== null) {
         // Add text before the diagram
         if (match.index > lastIndex) {
@@ -171,11 +217,11 @@ const SimpleMarkdownRenderer: React.FC<{ content: string; projectId?: string; co
           const diagramKey = `diagram-${hashString(part.content)}-${index}`;
           return (
             <div key={diagramKey} className="my-4">
-              <MermaidDiagram 
+              <MermaidDiagram
                 key={diagramKey}
-                chart={part.content} 
-                projectId={projectId} 
-                contextInfo={contextInfo} 
+                chart={part.content}
+                projectId={projectId}
+                contextInfo={contextInfo}
               />
             </div>
           );
@@ -269,16 +315,49 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
   // Get project ID from URL parameters, generate one if not provided
   const { projectId: urlProjectId } = useParams()
   const [projectId, setProjectId] = useState<string | null>(null)
-  
+
+  // Manual save function for immediate saves
+  const saveDataNow = async () => {
+    if (!projectId) return;
+
+    try {
+      const projectInfo: Record<string, string> = {};
+      projectQuestions.forEach(q => {
+        if (q.answered && q.answer) {
+          projectInfo[q.id] = q.answer;
+        }
+      });
+
+      if (projectId) {
+        await saveChatData(
+          projectId,
+          'default-user',
+          messages as ChatMessageType[],
+          projectInfo,
+          currentPersona,
+          currentTab,
+          tabContent,
+          tabContentGeneration
+        );
+      }
+    } catch (error) {
+      console.error('Error saving chat data manually:', error);
+    }
+  };
+
   // Generate or use existing project ID
   useEffect(() => {
     if (urlProjectId) {
+      // Save current project data before switching if we have an active project
+      if (projectId && projectId !== urlProjectId) {
+        saveDataNow();
+      }
       setProjectId(urlProjectId as string)
     } else {
       // Generate a new project ID if not in URL
       const newProjectId = `project-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       setProjectId(newProjectId)
-      
+
       // Optionally update the URL without causing a page reload
       if (typeof window !== 'undefined') {
         const newUrl = `/${newProjectId}`
@@ -286,7 +365,7 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
       }
     }
   }, [urlProjectId])
-  
+
   // State
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -309,15 +388,17 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
   const [feedbackMessage, setFeedbackMessage] = useState('')
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
-  
+
   // Ref for auto-scrolling messages
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [feedbackRating, setFeedbackRating] = useState<'up' | 'down' | null>(null)
-  
+
+
+
   // Change request state
   const [changeRequest, setChangeRequest] = useState('')
   const [isProcessingChange, setIsProcessingChange] = useState(false)
-  
+
   // Project questions state
   const [projectQuestions, setProjectQuestions] = useState<ProjectQuestion[]>([
     { id: 'trialName', question: 'What is the trial name and protocol number?', answered: false },
@@ -333,7 +414,33 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
   ])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [showQuestionPrompt, setShowQuestionPrompt] = useState(true)
-  
+
+  // Ref to track latest state for unmount saving
+  const stateRef = useRef({
+    messages,
+    projectQuestions,
+    currentPersona,
+    currentTab,
+    tabContent,
+    tabContentGeneration,
+    projectId,
+    isDataLoaded
+  });
+
+  // Update ref whenever state changes
+  useEffect(() => {
+    stateRef.current = {
+      messages,
+      projectQuestions,
+      currentPersona,
+      currentTab,
+      tabContent,
+      tabContentGeneration,
+      projectId,
+      isDataLoaded
+    };
+  }, [messages, projectQuestions, currentPersona, currentTab, tabContent, tabContentGeneration, projectId, isDataLoaded]);
+
   // Store conversation history for context
   const [conversationHistory, setConversationHistory] = useState<string[]>([
     "Hello! I'm your clinical trial operations assistant. I can help you organize your trial, create timelines, manage compliance, and prepare for audits. Let's start by answering some essential questions about your trial in the General tab."
@@ -346,15 +453,15 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
   // Force reload function to manually trigger data loading
   const forceReloadData = async () => {
     if (!projectId) return;
-    
+
     setIsDataLoaded(false);
-    
+
     try {
       const result = await loadChatData(projectId as string);
-      
+
       if (result.success && result.data) {
         const chatData = result.data;
-        
+
         // Restore project questions if they exist
         if (chatData.projectInfo && typeof chatData.projectInfo === 'object') {
           setProjectQuestions(prevQuestions => {
@@ -365,7 +472,7 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
               }
               return { ...q, answered: false, answer: undefined };
             });
-            
+
             // Update related states
             const allAnswered = updatedQuestions.every(q => q.answered);
             if (allAnswered) {
@@ -377,27 +484,27 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
                 setCurrentQuestionIndex(firstUnanswered);
               }
             }
-            
+
             return updatedQuestions;
           });
         }
-        
+
         // Restore other data
         if (chatData.messages && chatData.messages.length > 0) {
           setMessages(chatData.messages as Message[]);
-          const history = chatData.messages.map((msg: ChatMessageType) => 
+          const history = chatData.messages.map((msg: ChatMessageType) =>
             `${msg.sender === 'user' ? 'User' : 'AI'}: ${msg.text}`
           );
           setConversationHistory(history);
         }
-        
+
         if (chatData.persona) {
           setCurrentPersona(chatData.persona as Persona);
         }
         if (chatData.currentTab) {
           setCurrentTab(chatData.currentTab as TabType);
         }
-        
+
         // Restore tab content and generation status
         if (chatData.tabContent) {
           setTabContent(chatData.tabContent);
@@ -417,24 +524,24 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
   useEffect(() => {
     const loadPersistedData = async () => {
       if (!projectId) return;
-      
+
       try {
         const result = await loadChatData(projectId as string);
-        
+
         if (result.success && result.data) {
           const chatData = result.data;
-          
+
           // Restore messages if they exist
           if (chatData.messages && chatData.messages.length > 0) {
             setMessages(chatData.messages as Message[]);
-            
+
             // Rebuild conversation history from messages
-            const history = chatData.messages.map((msg: ChatMessageType) => 
+            const history = chatData.messages.map((msg: ChatMessageType) =>
               `${msg.sender === 'user' ? 'User' : 'AI'}: ${msg.text}`
             );
             setConversationHistory(history);
           }
-          
+
           // Restore project questions if they exist
           if (chatData.projectInfo && typeof chatData.projectInfo === 'object') {
             // Create updated questions array
@@ -446,13 +553,13 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
               }
               return { ...q, answered: false, answer: undefined };
             });
-            
+
             // Update states
             const allAnswered = updatedQuestions.every(q => q.answered);
-            
+
             // Apply the updates
             setProjectQuestions(updatedQuestions);
-            
+
             if (allAnswered) {
               setShowQuestionPrompt(false);
             } else {
@@ -463,7 +570,7 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
               }
             }
           }
-          
+
           // Restore persona and tab if they exist
           if (chatData.persona) {
             setCurrentPersona(chatData.persona as Persona);
@@ -471,7 +578,7 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
           if (chatData.currentTab) {
             setCurrentTab(chatData.currentTab as TabType);
           }
-          
+
           // Restore tab content and generation status
           if (chatData.tabContent) {
             setTabContent(chatData.tabContent);
@@ -510,75 +617,57 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [projectId, isDataLoaded]);
 
-  // Save data before page unload/navigation
+  // Save data before page unload/navigation/unmount
   useEffect(() => {
-    const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
-      if (!projectId || !isDataLoaded) return;
-      
+    const handleBeforeUnload = () => {
+      const state = stateRef.current;
+      if (!state.projectId || !state.isDataLoaded) return;
+
       try {
         // Prepare project info
         const projectInfo: Record<string, string> = {};
-        projectQuestions.forEach(q => {
+        state.projectQuestions.forEach(q => {
           if (q.answered && q.answer) {
             projectInfo[q.id] = q.answer;
           }
         });
-        
 
-        
-                  // Use sendBeacon for reliable data sending during page unload
-        if (navigator.sendBeacon && Object.keys(projectInfo).length > 0 && projectId) {
-          const data = JSON.stringify({
-            projectId,
-            userId: 'default-user',
-            messages: messages as ChatMessageType[],
-            projectInfo,
-            persona: currentPersona,
-            currentTab,
-            tabContent,
-            tabContentGeneration
-          });
-        
-        const blob = new Blob([data], { type: 'application/json' });
-        navigator.sendBeacon('/api/ai/chat/save', blob);
-                } else if (projectId) {
-          // Fallback: synchronous save (less reliable but better than nothing)
-          saveChatData(
-            projectId,
-            'default-user',
-            messages as ChatMessageType[],
-            projectInfo,
-            currentPersona,
-            currentTab,
-            tabContent,
-            tabContentGeneration
-          );
-        }  
+        saveDataBeacon(
+          state.projectId,
+          'default-user',
+          state.messages as ChatMessageType[],
+          projectInfo,
+          state.currentPersona,
+          state.currentTab,
+          state.tabContent,
+          state.tabContentGeneration
+        );
       } catch (error) {
         console.error('Error saving data before unload:', error);
       }
     };
 
-    // Add event listener
+    // Add event listener for page unload
     window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    // Cleanup
+
+    // Cleanup function runs on component unmount
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      handleBeforeUnload(); // Also save when component unmounts (e.g. navigation)
     };
-  }, [projectId, isDataLoaded, projectQuestions, messages, currentPersona, currentTab, tabContent, tabContentGeneration]);
+  }, []); // Empty dependency array as we use ref for latest state
 
   // Auto-save chat data when state changes
   useEffect(() => {
     console.log('Auto-save useEffect triggered with projectId:', projectId, 'isDataLoaded:', isDataLoaded);
     if (!projectId || !isDataLoaded) return;
-    
+
     // Convert project questions to a simple object for saving
     const projectInfo: Record<string, string> = {};
     projectQuestions.forEach(q => {
@@ -586,7 +675,7 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
         projectInfo[q.id] = q.answer;
       }
     });
-    
+
     // Only auto-save if there's actually data to save and we have a valid projectId
     if (projectId && (Object.keys(projectInfo).length > 0 || messages.length > 1)) {
       autoSaveChatData(
@@ -607,42 +696,15 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Manual save function for immediate saves
-  const saveDataNow = async () => {
-    if (!projectId) return;
-    
-    try {
-      const projectInfo: Record<string, string> = {};
-      projectQuestions.forEach(q => {
-        if (q.answered && q.answer) {
-          projectInfo[q.id] = q.answer;
-        }
-      });
-      
-      if (projectId) {
-        await saveChatData(
-          projectId,
-          'default-user',
-          messages as ChatMessageType[],
-          projectInfo,
-          currentPersona,
-          currentTab,
-          tabContent,
-          tabContentGeneration
-        );
-      }
-    } catch (error) {
-      console.error('Error saving chat data manually:', error);
-    }
-  };
+
 
   // Clear all chat data - Enhanced with better state reset
   const clearAllChatData = async () => {
     if (!projectId) return;
-    
+
     try {
       const result = await clearChatData(projectId as string);
-      
+
       if (result.success) {
         // Reset to initial state
         setMessages([
@@ -673,7 +735,7 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
         setCurrentTab('general');
         setTabContent({});
         setTabContentGeneration({});
-        
+
       } else {
         // Show user-friendly error message
         alert('Failed to clear chat data. Please try again.');
@@ -696,7 +758,7 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
           .split(' ')
           .map((word, index) => index === 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word)
           .join(' ');
-        
+
         return { ...info, [key]: question.answer };
       }
       return info;
@@ -759,17 +821,17 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
   const createContextAwarePrompt = (userInput: string): string => {
     // Combine conversation history but limit to prevent token overflow
     const recentHistory = conversationHistory.slice(-MAX_CONTEXT_LENGTH);
-    
+
     // Get project information for context
     const projectInfo = getProjectInfo();
     const hasProjectInfo = Object.keys(projectInfo).length > 0;
-    
+
     // Format the context and new prompt with diagram encouragement
-    const contextPrefix = recentHistory.length > 0 
+    const contextPrefix = recentHistory.length > 0
       ? `Previous conversation:\n${recentHistory.join('\n')}\n\nNew message: `
       : '';
-    
-    const diagramEncouragement = hasProjectInfo 
+
+    const diagramEncouragement = hasProjectInfo
       ? `\n\nWhen appropriate for the topic, please include relevant Mermaid.js diagrams in your response using proper syntax enclosed in code blocks like this:
 \`\`\`mermaid
 [your mermaid diagram here]
@@ -777,17 +839,17 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
 
 Use diagram types like flowchart, sequenceDiagram, erDiagram, classDiagram, gantt, journey, etc. to help visualize concepts, processes, or system architecture.`
       : '';
-      
+
     return contextPrefix + userInput + diagramEncouragement;
   }
 
   // Check if the message might be answering a project question
   const checkForQuestionAnswer = (userMessage: string, aiResponse: string) => {
     if (currentTab !== 'general' || !showQuestionPrompt) return false;
-    
+
     const currentQuestion = projectQuestions[currentQuestionIndex];
     if (!currentQuestion) return false;
-    
+
     // Accept any non-empty answer
     if (userMessage.trim().length > 0) {
       const updatedQuestions = [...projectQuestions];
@@ -796,9 +858,9 @@ Use diagram types like flowchart, sequenceDiagram, erDiagram, classDiagram, gant
         answered: true,
         answer: userMessage
       };
-      
+
       setProjectQuestions(updatedQuestions);
-      
+
       // Immediately save after answering a question
       const projectInfo: Record<string, string> = {};
       updatedQuestions.forEach(q => {
@@ -806,7 +868,7 @@ Use diagram types like flowchart, sequenceDiagram, erDiagram, classDiagram, gant
           projectInfo[q.id] = q.answer;
         }
       });
-      
+
       // Force an immediate save instead of waiting for auto-save
       if (projectId) {
         saveChatData(
@@ -822,11 +884,11 @@ Use diagram types like flowchart, sequenceDiagram, erDiagram, classDiagram, gant
           console.error('Failed to save question answer:', error);
         });
       }
-      
+
       // Move to next unanswered question
       const nextIndex = findNextUnansweredQuestionIndex(updatedQuestions, currentQuestionIndex);
       setCurrentQuestionIndex(nextIndex);
-      
+
       // Check if we've completed all questions or should continue asking
       if (nextIndex === currentQuestionIndex || updatedQuestions.every(q => q.answered)) {
         // All questions answered
@@ -839,12 +901,12 @@ Use diagram types like flowchart, sequenceDiagram, erDiagram, classDiagram, gant
           setMessages(prev => [...prev, completionMessage]);
           setConversationHistory(prev => [...prev, `AI: ${completionMessage.text}`]);
           setShowQuestionPrompt(false);
-          
+
           // Start generating content for all tabs now that we have project info
           generateAllTabContent();
         }, 1000);
-              } else {
-          // Still have more questions to answer, just show the next question
+      } else {
+        // Still have more questions to answer, just show the next question
         setTimeout(() => {
           const nextQuestion = updatedQuestions[nextIndex];
           const questionMessage = {
@@ -859,14 +921,14 @@ Use diagram types like flowchart, sequenceDiagram, erDiagram, classDiagram, gant
           // We're not adding this to conversation history since we're just collecting data
         }, 500);
       }
-      
+
       // Return true to indicate we've handled this message as a question answer
       return true;
     }
-    
+
     return false;
   };
-  
+
   // Find the next unanswered question index
   const findNextUnansweredQuestionIndex = (questions: ProjectQuestion[], currentIndex: number): number => {
     for (let i = currentIndex + 1; i < questions.length; i++) {
@@ -884,13 +946,13 @@ Use diagram types like flowchart, sequenceDiagram, erDiagram, classDiagram, gant
   const generateAllTabContent = async () => {
     // Get project information from answered questions
     const projectInfo = getProjectInfo();
-    
+
     // If we don't have enough project information, don't generate content
     if (Object.keys(projectInfo).length < 3) return;
-    
+
     // Set all tabs to pending
     const tabsToGenerate: Record<string, 'pending'> = {};
-    
+
     // Add Regulatory Advisor tabs
     ['protocolRequirements', 'documentControl', 'complianceDiagrams', 'riskControls', 'auditPreparation', 'smartAlerts'].forEach(tab => {
       const tabKey = `regulatoryAdvisor-${tab}`;
@@ -902,38 +964,38 @@ Use diagram types like flowchart, sequenceDiagram, erDiagram, classDiagram, gant
       const tabKey = `trialCoordinator-${tab}`;
       tabsToGenerate[tabKey] = 'pending';
     });
-    
+
     setTabContentGeneration(prev => ({
       ...prev,
       ...tabsToGenerate
     }));
-    
+
     // Now generate content for each tab in the background
     Object.keys(tabsToGenerate).forEach(async (tabKey) => {
       const [persona, tab] = tabKey.split('-') as [Persona, TabType];
-      
+
       try {
         // Update status to generating
         setTabContentGeneration(prev => ({
           ...prev,
           [tabKey]: 'generating'
         }));
-        
+
         // Generate comprehensive content for this tab with caching
         const content = await generateComprehensiveTabContent(
-          persona, 
-          tab, 
-          projectInfo, 
-          projectId || 'default-project', 
+          persona,
+          tab,
+          projectInfo,
+          projectId || 'default-project',
           false // forceRefresh = false for initial generation (use cache if available)
         );
-        
+
         // Store the generated content
         setTabContent(prev => ({
           ...prev,
           [tabKey]: content
         }));
-        
+
         // Update status to complete
         setTabContentGeneration(prev => ({
           ...prev,
@@ -941,7 +1003,7 @@ Use diagram types like flowchart, sequenceDiagram, erDiagram, classDiagram, gant
         }));
       } catch (error) {
         console.error(`Error generating content for ${tabKey}:`, error);
-        
+
         // Update status to error
         setTabContentGeneration(prev => ({
           ...prev,
@@ -954,48 +1016,48 @@ Use diagram types like flowchart, sequenceDiagram, erDiagram, classDiagram, gant
   // Handle sending messages
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return
-    
+
     const userInput = input.trim();
-    
+
     // Add user message
-    const userMessage: Message = { 
-      text: userInput, 
-      sender: 'user' 
+    const userMessage: Message = {
+      text: userInput,
+      sender: 'user'
     }
-    
+
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
-    
+
     try {
       // For the General tab and when in question mode, handle as a question answer first
       if (currentTab === 'general' && showQuestionPrompt) {
         const isQuestionAnswer = checkForQuestionAnswer(userInput, "");
-        
+
         if (isQuestionAnswer) {
           setIsLoading(false);
           return;
         }
       }
-      
+
       // If we got here, this is a regular message requiring an AI response
       // Store in conversation history (only for actual AI interactions, not during initial questions)
       setConversationHistory(prev => [...prev, `User: ${userInput}`]);
-      
+
       // Create context-aware prompt
       const contextAwarePrompt = createContextAwarePrompt(userInput);
-      
+
       // Use real API service
       const aiResult = await generateAIResponse(contextAwarePrompt);
-      
+
       // Check for success directly
       if (aiResult && aiResult.success === true && typeof aiResult.response === 'string') {
         // Get response from real AI API
         const aiResponse = aiResult.response;
-        
+
         // Update conversation history with AI response
         setConversationHistory(prev => [...prev, `AI: ${aiResponse}`]);
-        
+
         // Add AI response
         setMessages(prev => [...prev, {
           text: aiResponse,
@@ -1010,16 +1072,16 @@ Use diagram types like flowchart, sequenceDiagram, erDiagram, classDiagram, gant
       // Add error message
       const errorMessage = error instanceof Error ? error.message : String(error);
       let userFriendlyMessage = "I'm sorry, I encountered an error processing your request. Please try again.";
-      
+
       // Check for service unavailability error
-      if (errorMessage.includes('service is currently unavailable') || 
-          errorMessage.includes('Service Unavailable')) {
+      if (errorMessage.includes('service is currently unavailable') ||
+        errorMessage.includes('Service Unavailable')) {
         userFriendlyMessage = "I'm sorry, the AI service is currently unavailable. This may be due to high demand or scheduled maintenance. Please try again in a few minutes.";
       }
-      
+
       // Add error message to conversation history
       setConversationHistory(prev => [...prev, `AI: ${userFriendlyMessage}`]);
-      
+
       setMessages(prev => [...prev, {
         text: userFriendlyMessage,
         sender: 'ai',
@@ -1035,17 +1097,17 @@ Use diagram types like flowchart, sequenceDiagram, erDiagram, classDiagram, gant
     const loadTabContent = async () => {
       // Skip for the general tab since it has its own content
       if (currentTab === 'general') return;
-      
+
       // Create tab key
       const tabKey = `${currentPersona}-${currentTab}`;
-      
+
       // Check if we already have content for this tab or if it's already generating
       if (tabContent[tabKey] || tabContentGeneration[tabKey] === 'generating') return;
-      
+
       // Check if we have enough project information
       const projectInfo = getProjectInfo();
       const hasEnoughInfo = Object.keys(projectInfo).length >= 3;
-      
+
       // If we don't have enough info and this is first access, show a message
       if (!hasEnoughInfo && !tabContent[tabKey]) {
         setTabContent(prev => ({
@@ -1058,43 +1120,43 @@ This will ensure the AI can create relevant and specific content for your projec
         }));
         return;
       }
-      
+
       // Start generating content
       setIsTabContentLoading(true);
       setTabContentGeneration(prev => ({
         ...prev,
         [tabKey]: 'generating'
       }));
-      
+
       try {
         // Use the comprehensive generation for better results with caching
         const content = await generateComprehensiveTabContent(
-          currentPersona, 
-          currentTab, 
-          projectInfo, 
-          projectId as string, 
+          currentPersona,
+          currentTab,
+          projectInfo,
+          projectId as string,
           false // forceRefresh = false for normal loading (use cache if available)
         );
-        
+
         // Update content and status
         setTabContent(prev => ({
           ...prev,
           [tabKey]: content
         }));
-        
+
         setTabContentGeneration(prev => ({
           ...prev,
           [tabKey]: 'complete'
         }));
       } catch (error) {
         console.error('Error loading tab content:', error);
-        
+
         // Set error status and content
         setTabContentGeneration(prev => ({
           ...prev,
           [tabKey]: 'error'
         }));
-        
+
         setTabContent(prev => ({
           ...prev,
           [tabKey]: `# Error Generating Content
@@ -1107,27 +1169,27 @@ Error details: ${error instanceof Error ? error.message : String(error)}`
         setIsTabContentLoading(false);
       }
     }
-    
+
     loadTabContent();
   }, [currentPersona, currentTab]);
 
-    // Handle change requests
+  // Handle change requests
   const handleChangeRequest = async () => {
     if (!changeRequest.trim() || currentTab === 'general') return;
-    
+
     setIsProcessingChange(true);
-    
+
     try {
       // Get current tab content
       const tabKey = `${currentPersona}-${currentTab}`;
       const currentContent = tabContent[tabKey] || '';
-      
+
       if (!currentContent.trim()) {
         console.error('No current content to modify');
         alert('No content available to modify. Please generate content for this tab first.');
         return;
       }
-      
+
       // Create a prompt for the change request
       const projectInfo = getProjectInfo();
       const changePrompt = `Please modify the following content based on this change request:
@@ -1154,29 +1216,29 @@ Please provide the updated content that addresses the change request while maint
         tabType: currentTab,
         forceRefresh: true
       });
-      
+
       console.log('Change request result:', result);
-      
+
       if (result.success && result.response) {
         // Update the tab content with the modified version
         const newTabContent = {
           ...tabContent,
           [tabKey]: result.response
         };
-        
+
         setTabContent(newTabContent);
-        
+
         // Clear the change request input
         setChangeRequest('');
-        
+
         // Update generation status
         const newTabContentGeneration = {
           ...tabContentGeneration,
           [tabKey]: 'complete' as const
         };
-        
+
         setTabContentGeneration(newTabContentGeneration);
-        
+
         // Immediately save the updated content with the new states
         const currentProjectInfo = getProjectInfo();
         saveChatData(
@@ -1191,7 +1253,7 @@ Please provide the updated content that addresses the change request while maint
         ).catch(error => {
           console.error('Failed to save after change request:', error);
         });
-        
+
         console.log('Content updated successfully');
       } else {
         console.error('Failed to process change request:', result.error);
@@ -1367,7 +1429,7 @@ Please provide the updated content that addresses the change request while maint
   // Ask the first question when the component loads
   useEffect(() => {
     if (!isDataLoaded) return; // Wait for data to be loaded first
-    
+
     if (projectQuestions.length > 0 && currentTab === 'general' && showQuestionPrompt) {
       const firstUnansweredIndex = projectQuestions.findIndex(q => !q.answered);
       if (firstUnansweredIndex >= 0) {
@@ -1395,26 +1457,26 @@ Please provide the updated content that addresses the change request while maint
     // Keep only the first welcome message
     const welcomeMessage = messages[0];
     setMessages([welcomeMessage]);
-    
+
     // Keep only the first welcome message in conversation history
     const welcomeHistory = conversationHistory[0];
     setConversationHistory([welcomeHistory]);
-    
+
     // Set the refreshed flag
     setContextRefreshed(true);
-    
+
     // Reset the flag after 3 seconds
     setTimeout(() => {
       setContextRefreshed(false);
     }, 3000);
-    
+
     // Add a system message informing the user
     const contextResetMessage = {
       text: "Conversation context has been refreshed. The AI will no longer consider previous messages when generating responses.",
       sender: 'ai' as const,
       persona: currentPersona
     };
-    
+
     setMessages(prev => [...prev, contextResetMessage]);
   };
 
@@ -1422,40 +1484,39 @@ Please provide the updated content that addresses the change request while maint
   const renderGeneralTabContent = () => {
     const answeredCount = projectQuestions.filter(q => q.answered).length;
     const progress = (answeredCount / projectQuestions.length) * 100;
-    
+
     return (
       <div className="p-3 h-full overflow-auto">
         <h3 className="text-base font-semibold mb-3 flex items-center justify-between">
           <span>Project Requirements</span>
           <span className="text-sm text-gray-500">{answeredCount}/{projectQuestions.length} complete</span>
         </h3>
-        
+
         {/* Progress bar */}
         <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-4">
-          <div 
-            className="h-2 bg-indigo-500 rounded-full" 
+          <div
+            className="h-2 bg-indigo-500 rounded-full"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
-        
+
         {/* Questions list */}
         <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm mb-4">
           <h4 className="text-sm font-semibold mb-2">Essential Questions</h4>
           <ul className="space-y-2">
             {projectQuestions.map((question, index) => (
-              <li 
-                key={question.id} 
-                className={`text-sm p-2 rounded flex items-start gap-2 ${
-                  question.answered 
-                    ? 'bg-green-50 dark:bg-green-900/20' 
-                    : index === currentQuestionIndex && showQuestionPrompt
-                      ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
-                      : 'bg-gray-50 dark:bg-gray-800'
-                }`}
+              <li
+                key={question.id}
+                className={`text-sm p-2 rounded flex items-start gap-2 ${question.answered
+                  ? 'bg-green-50 dark:bg-green-900/20'
+                  : index === currentQuestionIndex && showQuestionPrompt
+                    ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+                    : 'bg-gray-50 dark:bg-gray-800'
+                  }`}
               >
                 <div className="mt-0.5">
-                  {question.answered 
-                    ? <HiCheckCircle className="h-4 w-4 text-green-500" /> 
+                  {question.answered
+                    ? <HiCheckCircle className="h-4 w-4 text-green-500" />
                     : <HiQuestionMarkCircle className="h-4 w-4 text-gray-400" />
                   }
                 </div>
@@ -1469,7 +1530,7 @@ Please provide the updated content that addresses the change request while maint
             ))}
           </ul>
         </div>
-        
+
         {/* Tips */}
         <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3">
           <h4 className="text-sm font-semibold mb-2">Why This Matters</h4>
@@ -1488,10 +1549,10 @@ Please provide the updated content that addresses the change request while maint
     if (currentTab === 'general') {
       return renderGeneralTabContent();
     }
-    
+
     const tabKey = `${currentPersona}-${currentTab}`;
     const generationStatus = tabContentGeneration[tabKey];
-    
+
     return (
       <div className="p-3 h-full overflow-auto">
         <h3 className="text-base font-semibold mb-3 flex items-center justify-between">
@@ -1543,7 +1604,7 @@ Please provide the updated content that addresses the change request while maint
             )}
           </div>
         </h3>
-        
+
         {/* Change Request Input - Only show for non-general tabs with content */}
         {['prFaq', 'userStories', 'customerJourneyMaps', 'productRoadmap', 'successMetrics', 'requirementsVision', 'systemDesign', 'architectureViz', 'apiDataModeling', 'infrastructureAsCode', 'genAiImplementation'].includes(currentTab) && generationStatus === 'complete' && (
           <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
@@ -1551,7 +1612,7 @@ Please provide the updated content that addresses the change request while maint
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Request Changes:
               </label>
-              
+
               {/* Processing status indicator */}
               {isProcessingChange && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 text-sm text-blue-600 dark:text-blue-300 p-2 rounded flex items-center gap-2">
@@ -1563,7 +1624,7 @@ Please provide the updated content that addresses the change request while maint
                   <span>Processing your change request...</span>
                 </div>
               )}
-              
+
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -1595,7 +1656,7 @@ Please provide the updated content that addresses the change request while maint
             </div>
           </div>
         )}
-        
+
         <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
           {/* Generation status indicator */}
           {generationStatus === 'generating' && (
@@ -1610,13 +1671,13 @@ Please provide the updated content that addresses the change request while maint
               </div>
             </div>
           )}
-          
+
           {/* Error status indicator */}
           {generationStatus === 'error' && (
             <div className="bg-red-50 dark:bg-red-900/20 text-sm text-red-600 dark:text-red-300 p-2 mb-3 rounded">
               <div className="flex items-center space-x-2">
                 <span>There was an error generating content. Please try refreshing.</span>
-                <button 
+                <button
                   onClick={handleRefreshTabContent}
                   className="text-sm flex items-center gap-1 text-red-600 hover:text-red-800"
                   disabled={isTabContentLoading}
@@ -1627,9 +1688,9 @@ Please provide the updated content that addresses the change request while maint
               </div>
             </div>
           )}
-          
+
           {/* Tab Content */}
-          
+
           {isTabContentLoading && generationStatus !== 'generating' ? (
             <div className="flex justify-center items-center h-40">
               <div className="animate-pulse flex space-x-2">
@@ -1668,9 +1729,9 @@ Please provide the updated content that addresses the change request while maint
     return (
       <div className="flex h-full bg-gray-50 dark:bg-gray-900">
         <div className="flex-1 flex items-center justify-center">
-          <LoadingSpinner 
-            size="lg" 
-            text="Loading your project..." 
+          <LoadingSpinner
+            size="lg"
+            text="Loading your project..."
             subtext="Preparing your clinical trial workspace"
           />
         </div>
@@ -1684,13 +1745,13 @@ Please provide the updated content that addresses the change request while maint
       <div className="flex-none p-2 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center">
         <div className="flex overflow-x-auto gap-1 text-base">
           {/* General Tab (always present) */}
-          <button 
+          <button
             className={getTabClasses('general')}
             onClick={() => setCurrentTab('general')}
           >
             General
           </button>
-          
+
           {currentPersona === 'trialCoordinator' ? (
             /* Trial Coordinator Tabs */
             <>
@@ -1767,25 +1828,23 @@ Please provide the updated content that addresses the change request while maint
             </>
           )}
         </div>
-        
+
         <div className="flex items-center gap-3">
           <div className="flex items-center bg-gray-900/60 border border-gray-700 rounded-full p-1 shadow-lg text-sm">
             <button
-              className={`px-3 py-1.5 rounded-full font-semibold transition-all duration-200 ${
-              currentPersona === 'trialCoordinator'
+              className={`px-3 py-1.5 rounded-full font-semibold transition-all duration-200 ${currentPersona === 'trialCoordinator'
                 ? 'bg-indigo-500 text-white shadow-md ring-1 ring-indigo-400'
                 : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
-            }`}
-            onClick={() => changePersona('trialCoordinator')}
-          >
-            Trial Coordinator
-          </button>
+                }`}
+              onClick={() => changePersona('trialCoordinator')}
+            >
+              Trial Coordinator
+            </button>
             <button
-              className={`px-3 py-1.5 rounded-full font-semibold transition-all duration-200 ${
-              currentPersona === 'regulatoryAdvisor'
+              className={`px-3 py-1.5 rounded-full font-semibold transition-all duration-200 ${currentPersona === 'regulatoryAdvisor'
                 ? 'bg-indigo-500 text-white shadow-md ring-1 ring-indigo-400'
                 : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
-            }`}
+                }`}
               onClick={() => changePersona('regulatoryAdvisor')}
             >
               Regulatory Advisor
@@ -1817,7 +1876,7 @@ Please provide the updated content that addresses the change request while maint
           </div>
         </div>
       </div>
-      
+
       {/* Main Content - Split into two sections horizontally */}
       <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Left Panel - Chat */}
@@ -1828,7 +1887,7 @@ Please provide the updated content that addresses the change request while maint
               <span className="font-semibold">Persistent Chat:</span> {isDataLoaded ? 'Messages auto-saved' : 'Loading...'} | {conversationHistory.length > 1 ? `Context: ${Math.min(conversationHistory.length, MAX_CONTEXT_LENGTH)} messages` : 'No chat history'}
             </span>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={refreshConversationContext}
                 className={`flex items-center gap-1 ${contextRefreshed ? 'text-green-500' : 'text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100'}`}
                 title="Clear conversation context (keeps saved data)"
@@ -1838,7 +1897,7 @@ Please provide the updated content that addresses the change request while maint
                 <span>{contextRefreshed ? 'Cleared!' : 'Clear Context'}</span>
               </button>
 
-              <button 
+              <button
                 onClick={clearAllChatData}
                 className="flex items-center gap-1 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
                 title="Clear all chat data and reset everything"
@@ -1848,233 +1907,233 @@ Please provide the updated content that addresses the change request while maint
               </button>
             </div>
           </div>
-          
+
           {/* Messages - Scrollable container with fixed height */}
           <div className="flex-1 overflow-y-auto p-4 text-base min-h-0 space-y-4">
 
-  {messages.map((message, index) => (
-    <div key={index} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+            {messages.map((message, index) => (
+              <div key={index} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
 
-      {/* QUESTION BLOCK */}
-      {message.isQuestion ? (
-        <div className="w-full max-w-[90%] bg-gradient-to-r from-indigo-50 to-purple-50 
+                {/* QUESTION BLOCK */}
+                {message.isQuestion ? (
+                  <div className="w-full max-w-[90%] bg-gradient-to-r from-indigo-50 to-purple-50 
                         dark:from-indigo-900/30 dark:to-purple-900/30
                         border border-indigo-300 dark:border-indigo-600
                         rounded-2xl p-5 shadow-md animate-fadeIn">
 
-          {/* Header */}
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-ping"></div>
-            <span className="text-sm font-semibold text-indigo-800 dark:text-indigo-200 tracking-wide">
-              {message.isFirstQuestion ? 'First Question' : `Question ${message.questionNumber}`}
-            </span>
-          </div>
+                    {/* Header */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-2 h-2 bg-indigo-500 rounded-full animate-ping"></div>
+                      <span className="text-sm font-semibold text-indigo-800 dark:text-indigo-200 tracking-wide">
+                        {message.isFirstQuestion ? 'First Question' : `Question ${message.questionNumber}`}
+                      </span>
+                    </div>
 
-          {/* Main Question */}
-          <div className="text-lg font-semibold text-indigo-900 dark:text-indigo-100 leading-relaxed">
-            {message.text}
-          </div>
+                    {/* Main Question */}
+                    <div className="text-lg font-semibold text-indigo-900 dark:text-indigo-100 leading-relaxed">
+                      {message.text}
+                    </div>
 
-          {/* Sample Answer */}
-          {message.sampleAnswer && (
-            <div className="mt-4 p-4 bg-gray-100/60 dark:bg-gray-800/40 rounded-xl border 
+                    {/* Sample Answer */}
+                    {message.sampleAnswer && (
+                      <div className="mt-4 p-4 bg-gray-100/60 dark:bg-gray-800/40 rounded-xl border 
                         border-gray-200 dark:border-gray-700 shadow-sm">
 
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 tracking-wider">
-                  SAMPLE ANSWER
-                </span>
-                <button
-                  onClick={() => navigator.clipboard.writeText(message.sampleAnswer || '')}
-                  className="text-xs px-2 py-1 rounded bg-indigo-600 text-white 
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 tracking-wider">
+                            SAMPLE ANSWER
+                          </span>
+                          <button
+                            onClick={() => navigator.clipboard.writeText(message.sampleAnswer || '')}
+                            className="text-xs px-2 py-1 rounded bg-indigo-600 text-white 
                              hover:bg-indigo-700 transition"
-                >
-                  Copy
-                </button>
-              </div>
+                          >
+                            Copy
+                          </button>
+                        </div>
 
-              <div className="text-sm italic text-gray-700 dark:text-gray-300 leading-relaxed">
-                {message.sampleAnswer}
-              </div>
-            </div>
-          )}
+                        <div className="text-sm italic text-gray-700 dark:text-gray-300 leading-relaxed">
+                          {message.sampleAnswer}
+                        </div>
+                      </div>
+                    )}
 
-          {/* Answer Input */}
-          {message.questionNumber === currentQuestionIndex + 1 && showQuestionPrompt && (
-            <div className="mt-4 p-4 bg-white dark:bg-gray-900 rounded-xl border 
+                    {/* Answer Input */}
+                    {message.questionNumber === currentQuestionIndex + 1 && showQuestionPrompt && (
+                      <div className="mt-4 p-4 bg-white dark:bg-gray-900 rounded-xl border 
                         border-gray-200 dark:border-gray-700 shadow-md">
 
-              <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
-                Your Answer:
-              </span>
+                        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                          Your Answer:
+                        </span>
 
-              <div className="flex mt-2 gap-3">
+                        <div className="flex mt-2 gap-3">
 
-                {/* Input */}
-                <input
-                  type="text"
-                  placeholder="Type your answer..."
-                  className="flex-1 px-3 py-2 rounded-lg text-sm dark:bg-gray-800
+                          {/* Input */}
+                          <input
+                            type="text"
+                            placeholder="Type your answer..."
+                            className="flex-1 px-3 py-2 rounded-lg text-sm dark:bg-gray-800
                              border border-gray-300 dark:border-gray-700 dark:text-white 
                              focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                      const answerText = e.currentTarget.value.trim();
+                            onKeyPress={(e) => {
+                              if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                                const answerText = e.currentTarget.value.trim();
 
-                      const userMessage = { text: answerText, sender: "user" as const };
-                      setMessages(prev => [...prev, userMessage]);
-                      setConversationHistory(prev => [...prev, `User: ${answerText}`]);
+                                const userMessage = { text: answerText, sender: "user" as const };
+                                setMessages(prev => [...prev, userMessage]);
+                                setConversationHistory(prev => [...prev, `User: ${answerText}`]);
 
-                      const questionIndex = message.questionNumber ? message.questionNumber - 1 : 0;
-                      const updatedQuestions = [...projectQuestions];
+                                const questionIndex = message.questionNumber ? message.questionNumber - 1 : 0;
+                                const updatedQuestions = [...projectQuestions];
 
-                      if (updatedQuestions[questionIndex]) {
-                        updatedQuestions[questionIndex] = {
-                          ...updatedQuestions[questionIndex],
-                          answered: true,
-                          answer: answerText
-                        };
-                        setProjectQuestions(updatedQuestions);
-                        e.currentTarget.value = "";
+                                if (updatedQuestions[questionIndex]) {
+                                  updatedQuestions[questionIndex] = {
+                                    ...updatedQuestions[questionIndex],
+                                    answered: true,
+                                    answer: answerText
+                                  };
+                                  setProjectQuestions(updatedQuestions);
+                                  e.currentTarget.value = "";
 
-                        const nextIndex = findNextUnansweredQuestionIndex(updatedQuestions, questionIndex);
-                        setCurrentQuestionIndex(nextIndex);
+                                  const nextIndex = findNextUnansweredQuestionIndex(updatedQuestions, questionIndex);
+                                  setCurrentQuestionIndex(nextIndex);
 
-                        if (nextIndex !== questionIndex && !updatedQuestions.every(q => q.answered)) {
-                          setTimeout(() => {
-                            const nextQuestion = updatedQuestions[nextIndex];
-                            const questionMessage = {
-                              text: nextQuestion.question,
-                              sender: "ai" as const,
-                              persona: currentPersona,
-                              isQuestion: true,
-                              questionNumber: nextIndex + 1,
-                              sampleAnswer: SAMPLE_ANSWERS[nextQuestion.id] || ""
-                            };
-                            setMessages(prev => [...prev, questionMessage]);
-                          }, 500);
-                        } else if (updatedQuestions.every(q => q.answered)) {
-                          setTimeout(() => {
-                            const completionMessage = {
-                              text: "Great! You've answered all questions. I'll now generate content for all remaining tabs.",
-                              sender: "ai" as const,
-                              persona: currentPersona
-                            };
-                            setMessages(prev => [...prev, completionMessage]);
-                            setConversationHistory(prev => [...prev, `AI: ${completionMessage.text}`]);
-                            setShowQuestionPrompt(false);
-                            generateAllTabContent();
-                          }, 1000);
-                        }
-                      }
-                    }
-                  }}
-                />
+                                  if (nextIndex !== questionIndex && !updatedQuestions.every(q => q.answered)) {
+                                    setTimeout(() => {
+                                      const nextQuestion = updatedQuestions[nextIndex];
+                                      const questionMessage = {
+                                        text: nextQuestion.question,
+                                        sender: "ai" as const,
+                                        persona: currentPersona,
+                                        isQuestion: true,
+                                        questionNumber: nextIndex + 1,
+                                        sampleAnswer: SAMPLE_ANSWERS[nextQuestion.id] || ""
+                                      };
+                                      setMessages(prev => [...prev, questionMessage]);
+                                    }, 500);
+                                  } else if (updatedQuestions.every(q => q.answered)) {
+                                    setTimeout(() => {
+                                      const completionMessage = {
+                                        text: "Great! You've answered all questions. I'll now generate content for all remaining tabs.",
+                                        sender: "ai" as const,
+                                        persona: currentPersona
+                                      };
+                                      setMessages(prev => [...prev, completionMessage]);
+                                      setConversationHistory(prev => [...prev, `AI: ${completionMessage.text}`]);
+                                      setShowQuestionPrompt(false);
+                                      generateAllTabContent();
+                                    }, 1000);
+                                  }
+                                }
+                              }
+                            }}
+                          />
 
-                {/* Submit Button */}
-                <button
-                  className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 
+                          {/* Submit Button */}
+                          <button
+                            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 
                              text-white text-sm font-medium transition"
-                  onClick={(e) => {
-                    const input = (e.currentTarget as HTMLButtonElement).parentElement
-                      ?.querySelector("input") as HTMLInputElement;
+                            onClick={(e) => {
+                              const input = (e.currentTarget as HTMLButtonElement).parentElement
+                                ?.querySelector("input") as HTMLInputElement;
 
-                    if (input && input.value.trim()) {
-                      const answerText = input.value.trim();
+                              if (input && input.value.trim()) {
+                                const answerText = input.value.trim();
 
-                      const userMessage = { text: answerText, sender: "user" as const };
-                      setMessages(prev => [...prev, userMessage]);
-                      setConversationHistory(prev => [...prev, `User: ${answerText}`]);
+                                const userMessage = { text: answerText, sender: "user" as const };
+                                setMessages(prev => [...prev, userMessage]);
+                                setConversationHistory(prev => [...prev, `User: ${answerText}`]);
 
-                      const questionIndex = message.questionNumber ? message.questionNumber - 1 : 0;
-                      const updatedQuestions = [...projectQuestions];
+                                const questionIndex = message.questionNumber ? message.questionNumber - 1 : 0;
+                                const updatedQuestions = [...projectQuestions];
 
-                      if (updatedQuestions[questionIndex]) {
-                        updatedQuestions[questionIndex] = {
-                          ...updatedQuestions[questionIndex],
-                          answered: true,
-                          answer: answerText
-                        };
-                        setProjectQuestions(updatedQuestions);
-                        input.value = "";
+                                if (updatedQuestions[questionIndex]) {
+                                  updatedQuestions[questionIndex] = {
+                                    ...updatedQuestions[questionIndex],
+                                    answered: true,
+                                    answer: answerText
+                                  };
+                                  setProjectQuestions(updatedQuestions);
+                                  input.value = "";
 
-                        const nextIndex = findNextUnansweredQuestionIndex(updatedQuestions, questionIndex);
-                        setCurrentQuestionIndex(nextIndex);
+                                  const nextIndex = findNextUnansweredQuestionIndex(updatedQuestions, questionIndex);
+                                  setCurrentQuestionIndex(nextIndex);
 
-                        if (!updatedQuestions.every(q => q.answered)) {
-                          setTimeout(() => {
-                            const nextQuestion = updatedQuestions[nextIndex];
-                            const questionMessage = {
-                              text: nextQuestion.question,
-                              sender: "ai" as const,
-                              persona: currentPersona,
-                              isQuestion: true,
-                              questionNumber: nextIndex + 1,
-                              sampleAnswer: SAMPLE_ANSWERS[nextQuestion.id] || ""
-                            };
-                            setMessages(prev => [...prev, questionMessage]);
-                          }, 500);
-                        } else {
-                          setTimeout(() => {
-                            const completionMessage = {
-                              text: "Great! You've answered all questions. I'll now generate content for the other tabs.",
-                              sender: "ai" as const,
-                              persona: currentPersona
-                            };
-                            setMessages(prev => [...prev, completionMessage]);
-                            setConversationHistory(prev => [...prev, `AI: ${completionMessage.text}`]);
-                            setShowQuestionPrompt(false);
-                            generateAllTabContent();
-                          }, 900);
-                        }
-                      }
-                    }
-                  }}
-                >
-                  Submit
-                </button>
+                                  if (!updatedQuestions.every(q => q.answered)) {
+                                    setTimeout(() => {
+                                      const nextQuestion = updatedQuestions[nextIndex];
+                                      const questionMessage = {
+                                        text: nextQuestion.question,
+                                        sender: "ai" as const,
+                                        persona: currentPersona,
+                                        isQuestion: true,
+                                        questionNumber: nextIndex + 1,
+                                        sampleAnswer: SAMPLE_ANSWERS[nextQuestion.id] || ""
+                                      };
+                                      setMessages(prev => [...prev, questionMessage]);
+                                    }, 500);
+                                  } else {
+                                    setTimeout(() => {
+                                      const completionMessage = {
+                                        text: "Great! You've answered all questions. I'll now generate content for the other tabs.",
+                                        sender: "ai" as const,
+                                        persona: currentPersona
+                                      };
+                                      setMessages(prev => [...prev, completionMessage]);
+                                      setConversationHistory(prev => [...prev, `AI: ${completionMessage.text}`]);
+                                      setShowQuestionPrompt(false);
+                                      generateAllTabContent();
+                                    }, 900);
+                                  }
+                                }
+                              }
+                            }}
+                          >
+                            Submit
+                          </button>
+
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                ) : (
+                  // REGULAR CHAT BUBBLE
+                  <div
+                    className={`max-w-[80%] px-4 py-2 rounded-2xl shadow-sm animate-slideUp
+          ${message.sender === "user"
+                        ? "bg-indigo-600 text-white rounded-br-none"
+                        : "bg-gray-200 dark:bg-gray-700 dark:text-white rounded-bl-none"
+                      }`}
+                  >
+                    {message.sender === "ai" && message.persona && (
+                      <div className="text-xs text-gray-500 dark:text-gray-300 mb-1">
+                        {message.persona === "regulatoryAdvisor" ? "Regulatory Advisor" : "Trial Coordinator"}
+                      </div>
+                    )}
+                    <div className="text-sm whitespace-pre-wrap leading-relaxed">{message.text}</div>
+                  </div>
+                )}
 
               </div>
-            </div>
-          )}
+            ))}
 
-        </div>
-      ) : (
-        // REGULAR CHAT BUBBLE
-        <div
-          className={`max-w-[80%] px-4 py-2 rounded-2xl shadow-sm animate-slideUp
-          ${message.sender === "user"
-            ? "bg-indigo-600 text-white rounded-br-none"
-            : "bg-gray-200 dark:bg-gray-700 dark:text-white rounded-bl-none"
-          }`}
-        >
-          {message.sender === "ai" && message.persona && (
-            <div className="text-xs text-gray-500 dark:text-gray-300 mb-1">
-              {message.persona === "regulatoryAdvisor" ? "Regulatory Advisor" : "Trial Coordinator"}
-            </div>
-          )}
-          <div className="text-sm whitespace-pre-wrap leading-relaxed">{message.text}</div>
-        </div>
-      )}
+            {/* Loading Indicator */}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="px-3 py-2 bg-gray-300 dark:bg-gray-700 rounded-xl shadow-sm">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce delay-150"></div>
+                    <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce delay-300"></div>
+                  </div>
+                </div>
+              </div>
+            )}
 
-    </div>
-  ))}
-
-  {/* Loading Indicator */}
-  {isLoading && (
-    <div className="flex justify-start">
-      <div className="px-3 py-2 bg-gray-300 dark:bg-gray-700 rounded-xl shadow-sm">
-        <div className="flex space-x-1">
-          <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></div>
-          <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce delay-150"></div>
-          <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce delay-300"></div>
-        </div>
-      </div>
-    </div>
-  )}
-
-  <div ref={messagesEndRef} />
-</div>
+            <div ref={messagesEndRef} />
+          </div>
 
           {/* Footer */}
           <div className="flex-none p-3 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
@@ -2099,7 +2158,7 @@ Please provide the updated content that addresses the change request while maint
               </div>
             </div>
           </div>
-          
+
           {/* Input - Fixed at bottom */}
           {/* <div className="flex-none p-2 border-t dark:border-gray-700 bg-white dark:bg-gray-900">
             <div className="flex gap-2">
@@ -2124,7 +2183,7 @@ Please provide the updated content that addresses the change request while maint
             </div>
           </div> */}
         </div>
-        
+
         {/* Right Panel - Content Area */}
         <div className="w-3/5 flex-1 bg-gray-50 dark:bg-gray-800 relative">
           {/* Tab Content */}
