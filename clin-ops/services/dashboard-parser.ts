@@ -54,9 +54,12 @@ export function parseTabContent(tabType: string, content: string): ParseResult {
     lastIndex = match.index + match[0].length
   }
 
+  // Create a version of content without diagrams for other parsers to avoid false positives
+  const workingContent = content.replace(diagramRegex, '')
+
   // Extract KPIs (numbers with labels) - improved regex
   const kpiRegex = /\*\*([^*]+?):\*\*\s*(\d+(?:\.\d+)?)\s*(?:\/\s*(\d+(?:\.\d+)?))?\s*(?:\(([^)]+)\))?|(\w+(?:\s+\w+)*):\s*(\d+(?:\.\d+)?)\s*(?:\/\s*(\d+(?:\.\d+)?))?\s*(?:\(([^)]+)\))?/gm
-  while ((match = kpiRegex.exec(content)) !== null) {
+  while ((match = kpiRegex.exec(workingContent)) !== null) {
     const label = (match[1] || match[5])?.trim()
     const value = parseFloat(match[2] || match[6])
     const target = match[3] || match[7] ? parseFloat(match[3] || match[7]) : undefined
@@ -79,10 +82,10 @@ export function parseTabContent(tabType: string, content: string): ParseResult {
   }
 
   // Extract tables (markdown tables)
-  const tableRegex = /(\|[^\n]+\|[\s\S]*?(?=\n\n|\n#{1,6}|$))/gm
-  while ((match = tableRegex.exec(content)) !== null) {
+  const tableRegex = /((?:\|[^\n]+\|[\t ]*(?:\r?\n|$))+)/gm
+  while ((match = tableRegex.exec(workingContent)) !== null) {
     const tableText = match[1].trim()
-    const rows = tableText.split('\n').filter(line => line.trim() && !line.match(/^\|[\s:-]+\|$/))
+    const rows = tableText.split('\n').filter(line => line.trim() && !line.match(/^\|[\s:|-]+\|$/))
 
     if (rows.length > 1) {
       // Get heading before table
@@ -118,7 +121,7 @@ export function parseTabContent(tabType: string, content: string): ParseResult {
   const milestoneRegex = /(?:^|\n)(?:\*\*|-)?\s*(.+?):\s*((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}|\d{4}-\d{2}-\d{2})/gim
   const milestones: Array<{ event: string; date: string }> = []
 
-  while ((match = milestoneRegex.exec(content)) !== null) {
+  while ((match = milestoneRegex.exec(workingContent)) !== null) {
     milestones.push({
       event: match[1].trim(),
       date: match[2].trim()
@@ -138,8 +141,8 @@ export function parseTabContent(tabType: string, content: string): ParseResult {
   }
 
   // Extract bullet/numbered lists (important items)
-  const listRegex = /#{1,6}\s+(.+?)\n((?:(?:\*|-|\d+\.)\s+.+\n?)+)/gm
-  while ((match = listRegex.exec(content)) !== null) {
+  const listRegex = /#{1,6}\s+(.+?)\n\s*((?:(?:\*|-|\d+\.)\s+.+\n?)+)/gm
+  while ((match = listRegex.exec(workingContent)) !== null) {
     const title = match[1].trim()
     const listContent = match[2].trim()
     const items = listContent.split('\n')

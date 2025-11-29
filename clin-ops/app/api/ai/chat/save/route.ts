@@ -10,47 +10,52 @@ export async function POST(request: Request) {
     // For improved robustness, try multiple approaches to get the body
     let body;
     let rawBody;
-    
-    // First try the standard request.json() method
+
+    // First, try to read as text (works better with sendBeacon)
     try {
-      body = await request.json();
-    } catch (jsonError) {
-      console.log('Standard JSON parsing failed, trying text parsing...', jsonError);
-      
-      // If that fails, get the raw text and try to parse it
-      try {
-        const clonedRequest = request.clone();
-        rawBody = await clonedRequest.text();
-        console.log('Raw request body received:', rawBody);
-        
-        // Only try to parse if there's actually content and looks like JSON
-        if (rawBody && rawBody.trim()) {
-          // Check if it looks like a JSON object or array
-          if ((rawBody.trim().startsWith('{') && rawBody.trim().endsWith('}')) || 
-              (rawBody.trim().startsWith('[') && rawBody.trim().endsWith(']'))) {
-            body = JSON.parse(rawBody);
-          } else {
-            console.log('Content does not appear to be valid JSON, received:', rawBody);
-            return NextResponse.json({
-              success: false,
-              error: 'Received content is not in valid JSON format'
-            }, { status: 400 });
-          }
-        } else {
-          console.log('Empty request body received');
-          return NextResponse.json({
-            success: false,
-            error: 'Empty request body received'
-          }, { status: 400 });
-        }
-      } catch (parseError: any) {
-        console.error('Error parsing JSON:', parseError);
+      rawBody = await request.text();
+
+      // Check if body is empty
+      if (!rawBody || !rawBody.trim()) {
+        console.log('Empty request body received, returning success for beacon requests');
+        // Return success for empty beacon requests (prevents errors on page unload)
         return NextResponse.json({
-          success: false,
-          error: `Error parsing request body: ${parseError.message || 'Invalid JSON'}`,
-          receivedData: rawBody?.substring(0, 100) // Include the first portion of what was received for debugging
-        }, { status: 400 });
+          success: true,
+          message: 'No data to save'
+        }, { status: 200 });
       }
+
+      // Try to parse the text as JSON
+      body = JSON.parse(rawBody);
+    } catch (parseError) {
+      console.error('Error parsing request body:', parseError);
+      console.log('Raw body:', rawBody?.substring(0, 200));
+
+      // Return success for malformed beacon requests to avoid errors
+      return NextResponse.json({
+        success: true,
+        message: 'Could not parse request data'
+      }, { status: 200 });
+    }
+
+    // If we got here with no body, return success
+    if (!body) {
+      return NextResponse.json({
+        success: true,
+        message: 'No data to save'
+      }, { status: 200 });
+    }
+
+    // Validate we have required fields (if body exists)
+    if (!body.projectId || !body.userId) {
+      console.error('Missing required fields:', {
+        hasProjectId: !!body.projectId,
+        hasUserId: !!body.userId
+      });
+      return NextResponse.json({
+        success: false,
+        error: 'Missing required fields: projectId or userId'
+      }, { status: 400 });
     }
 
     // Extract necessary fields
@@ -70,11 +75,20 @@ export async function POST(request: Request) {
     const chatId = crypto.randomUUID();
 
     await prisma.$transaction(async (tx: any) => {
-      // Ensure project exists
+      // Ensure project exists (Project.userId is required in schema)
+      // Only update updatedAt on existing projects, don't overwrite name/description
       await tx.project.upsert({
         where: { id: projectId },
-        update: { name: `Project ${projectId}`, description: 'Auto-generated project for chat data', userId },
-        create: { id: projectId, userId, name: `Project ${projectId}`, description: 'Auto-generated project for chat data' },
+        update: {
+          // Just update timestamp to track activity, preserve name and description
+          updatedAt: new Date()
+        },
+        create: {
+          id: projectId,
+          userId,
+          name: `Project ${projectId.slice(-8)}`,
+          description: 'Created from chat session'
+        },
       });
 
       // Create chat history row
@@ -107,7 +121,8 @@ export async function POST(request: Request) {
 
       // Save tab content (replace existing for this chat)
       if (tabContent) {
-        for (const [tabTypeKey, content] of Object.entries(tabContent)) {
+        const entries = Object.entries(tabContent as Record<string, string>);
+        for (const [tabTypeKey, content] of entries) {
           await tx.tabContent.create({
             data: {
               id: crypto.randomUUID(),
@@ -121,7 +136,8 @@ export async function POST(request: Request) {
 
       // Save tab content generation (replace existing for this chat)
       if (tabContentGeneration) {
-        for (const [tabTypeKey, status] of Object.entries(tabContentGeneration)) {
+        const genEntries = Object.entries(tabContentGeneration as Record<string, string>);
+        for (const [tabTypeKey, status] of genEntries) {
           await tx.tabContentGeneration.create({
             data: {
               id: crypto.randomUUID(),
@@ -149,21 +165,33 @@ export async function POST(request: Request) {
       }
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Create safe error details for logging
-    const errorDetails = {
-      message: error?.message || (error instanceof Error ? error.toString() : 'Unknown error'),
-      type: error?.constructor?.name || typeof error,
-      code: error?.code,
-      name: error?.name
-    };
-    
+    let message = 'Failed to save chat data';
+    let type: string = typeof error;
+    let code: string | undefined;
+    let name: string | undefined;
+
+    if (error instanceof Error) {
+      message = error.message || message;
+      type = error.constructor.name || type;
+      name = error.name;
+    } else if (typeof error === 'object' && error !== null) {
+      const errObj = error as { message?: string; code?: string; name?: string; constructor?: { name?: string } };
+      message = errObj.message || message;
+      type = errObj.constructor?.name || type;
+      code = errObj.code;
+      name = errObj.name;
+    }
+
+    const errorDetails = { message, type, code, name };
+
     console.error('Error saving chat data:', errorDetails);
-    
+
     return NextResponse.json({
       success: false,
-      error: errorDetails.message || 'Failed to save chat data',
-      errorType: errorDetails.type
+      error: message,
+      errorType: type
     }, { status: 500 });
   }
 }

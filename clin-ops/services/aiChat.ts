@@ -59,15 +59,15 @@ export async function saveChatData(
   try {
     // Ensure we always have a userId even if one wasn't provided
     const actualUserId = userId || 'default-user';
-    
+
     // Validate required parameters
     if (!projectId) {
       throw new Error('Project ID is required but was not provided');
     }
-    
+
     // Log what we're about to send for debugging
     console.log('saveChatData called with projectId:', projectId, 'and userId:', actualUserId);
-    
+
     const payload = {
       projectId,
       userId: actualUserId,
@@ -78,20 +78,15 @@ export async function saveChatData(
       tabContent,
       tabContentGeneration
     };
-    
+
     console.log('Full payload being sent:', payload);
     const response = await req.post('/api/ai/chat/save', payload);
 
-    // Handle nested response structure
-    if (response.data?.data) {
-      return response.data.data;
-    } else {
-      return response.data;
-    }
+    return response;
   } catch (error: any) {
     // Ensure we have a string representation of the error
     const errorMessage = error?.message || (error instanceof Error ? error.toString() : 'Unknown error');
-    
+
     // Define interface for safe error details with optional properties
     interface SafeErrorDetails {
       message: string;
@@ -103,7 +98,7 @@ export async function saveChatData(
       responseData?: string;
       responseDataError?: string;
     }
-    
+
     // Create a safe serializable error object without circular references
     const safeErrorDetails: SafeErrorDetails = {
       message: errorMessage,
@@ -112,7 +107,7 @@ export async function saveChatData(
       name: error?.name,
       stack: error?.stack?.split('\n').slice(0, 3).join('\n') // Only include first few lines of stack
     };
-    
+
     // Safely extract response data if available
     if (error?.response) {
       try {
@@ -128,9 +123,9 @@ export async function saveChatData(
         safeErrorDetails.responseDataError = 'Could not serialize response data';
       }
     }
-    
+
     console.error('Error saving chat data:', safeErrorDetails);
-    
+
     return {
       success: false,
       error: error?.response?.data?.error || errorMessage || 'Failed to save chat data'
@@ -147,16 +142,11 @@ export async function loadChatData(projectId: string): Promise<ChatApiResponse> 
   try {
     const response = await req.get(`/api/ai/chat/${projectId}`);
 
-    // Handle nested response structure
-    if (response.data?.data) {
-      return response.data.data;
-    } else {
-      return response.data;
-    }
+    return response;
   } catch (error: any) {
     // Ensure we have a string representation of the error
     const errorMessage = error?.message || (error instanceof Error ? error.toString() : 'Unknown error');
-    
+
     // Define interface for safe error details with optional properties
     interface SafeErrorDetails {
       message: string;
@@ -168,7 +158,7 @@ export async function loadChatData(projectId: string): Promise<ChatApiResponse> 
       responseData?: string;
       responseDataError?: string;
     }
-    
+
     // Create a safe serializable error object without circular references
     const safeErrorDetails: SafeErrorDetails = {
       message: errorMessage,
@@ -177,7 +167,7 @@ export async function loadChatData(projectId: string): Promise<ChatApiResponse> 
       name: error?.name,
       stack: error?.stack?.split('\n').slice(0, 3).join('\n') // Only include first few lines of stack
     };
-    
+
     // Safely extract response data if available
     if (error?.response) {
       try {
@@ -193,9 +183,9 @@ export async function loadChatData(projectId: string): Promise<ChatApiResponse> 
         safeErrorDetails.responseDataError = 'Could not serialize response data';
       }
     }
-    
+
     console.error('Error loading chat data:', safeErrorDetails);
-    
+
     return {
       success: false,
       error: error?.response?.data?.error || errorMessage || 'Failed to load chat data'
@@ -212,16 +202,11 @@ export async function clearChatData(projectId: string): Promise<ChatApiResponse>
   try {
     const response = await req.put(`/api/ai/chat/clear/${projectId}`);
 
-    // Handle nested response structure
-    if (response.data?.data) {
-      return response.data.data;
-    } else {
-      return response.data;
-    }
+    return response;
   } catch (error: any) {
     // Ensure we have a string representation of the error
     const errorMessage = error?.message || (error instanceof Error ? error.toString() : 'Unknown error');
-    
+
     // Define interface for safe error details with optional properties
     interface SafeErrorDetails {
       message: string;
@@ -233,7 +218,7 @@ export async function clearChatData(projectId: string): Promise<ChatApiResponse>
       responseData?: string;
       responseDataError?: string;
     }
-    
+
     // Create a safe serializable error object without circular references
     const safeErrorDetails: SafeErrorDetails = {
       message: errorMessage,
@@ -242,7 +227,7 @@ export async function clearChatData(projectId: string): Promise<ChatApiResponse>
       name: error?.name,
       stack: error?.stack?.split('\n').slice(0, 3).join('\n') // Only include first few lines of stack
     };
-    
+
     // Safely extract response data if available
     if (error?.response) {
       try {
@@ -258,9 +243,9 @@ export async function clearChatData(projectId: string): Promise<ChatApiResponse>
         safeErrorDetails.responseDataError = 'Could not serialize response data';
       }
     }
-    
+
     console.error('Error clearing chat data:', safeErrorDetails);
-    
+
     return {
       success: false,
       error: error?.response?.data?.error || errorMessage || 'Failed to clear chat data'
@@ -272,7 +257,11 @@ export async function clearChatData(projectId: string): Promise<ChatApiResponse>
  * Auto-save chat data with debouncing to prevent too many API calls
  * Note: This functionality is temporarily disabled as requested
  */
-let saveTimeout: NodeJS.Timeout | null = null;
+/**
+ * Auto-save chat data with debouncing to prevent too many API calls
+ * Uses a Map to track timeouts per project to avoid race conditions when switching projects
+ */
+const saveTimeouts = new Map<string, NodeJS.Timeout>();
 
 export function autoSaveChatData(
   projectId: string,
@@ -285,29 +274,23 @@ export function autoSaveChatData(
   tabContentGeneration?: Record<string, string>,
   delay: number = 2000
 ): void {
-  // Auto-save functionality is disabled
-  console.log('Auto-save is disabled. Chat data will not be automatically saved.');
-  
-  // Log what would have been saved for debugging purposes
-  console.log(`Would have saved chat data for project: ${projectId}, user: ${userId}, messages: ${messages?.length || 0}`);
-  
-  // Return without setting up the save timeout
-  return;
-
-  /* Original implementation kept for reference
-  // Clear previous timeout
-  if (saveTimeout) {
-    clearTimeout(saveTimeout);
+  // Clear previous timeout for this specific project
+  if (saveTimeouts.has(projectId)) {
+    clearTimeout(saveTimeouts.get(projectId));
   }
 
   // Set new timeout
-  saveTimeout = setTimeout(async () => {
+  const timeout = setTimeout(async () => {
     try {
       await saveChatData(projectId, userId || 'default-user', messages, projectInfo, persona, currentTab, tabContent, tabContentGeneration);
+      console.log(`Auto-saved chat data for project: ${projectId}, messages: ${messages?.length || 0}`);
+
+      // Clean up the map entry after successful execution
+      saveTimeouts.delete(projectId);
     } catch (error: any) {
       // Ensure we have a string representation of the error
       const errorMessage = error?.message || (error instanceof Error ? error.toString() : 'Unknown error');
-      
+
       // Define interface for safe error details
       interface SafeErrorDetails {
         message: string;
@@ -316,7 +299,7 @@ export function autoSaveChatData(
         name?: string;
         stack?: string;
       }
-      
+
       // Create safe serializable error object
       const safeErrorDetails: SafeErrorDetails = {
         message: errorMessage,
@@ -324,9 +307,11 @@ export function autoSaveChatData(
         name: error?.name,
         stack: error?.stack?.split('\n').slice(0, 3).join('\n')
       };
-      
+
       console.error('Auto-save failed:', safeErrorDetails);
     }
   }, delay);
-  */
+
+  // Store the timeout in the map
+  saveTimeouts.set(projectId, timeout);
 } 

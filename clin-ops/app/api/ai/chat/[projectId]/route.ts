@@ -8,14 +8,14 @@ export async function GET(
 ) {
   try {
     const { projectId } = await params;
-    
+
     if (!projectId) {
       return NextResponse.json(
         { success: false, error: 'Project ID is required' },
         { status: 400 }
       );
     }
-    
+
     // Load the most recent chat history for this project
     const chat = await prisma.chatHistory.findFirst({
       where: { projectId },
@@ -43,7 +43,7 @@ export async function GET(
       });
     }
 
-    const messages = chat.messages.map((m: any) => ({
+    const messages = chat.messages.map(m => ({
       text: m.text,
       sender: m.sender as 'user' | 'ai',
       persona: m.persona ?? undefined,
@@ -51,17 +51,21 @@ export async function GET(
     }));
 
     const tabContent: Record<string, string> = {};
-    for (const t of chat.tabContents as any[]) tabContent[t.tabType] = t.content;
+    for (const t of chat.tabContents) {
+      tabContent[t.tabType] = t.content;
+    }
 
     const tabContentGeneration: Record<string, string> = {};
-    for (const g of chat.tabGenerations as any[]) tabContentGeneration[g.tabType] = g.status;
+    for (const g of chat.tabGenerations) {
+      tabContentGeneration[g.tabType] = g.status;
+    }
 
     const data: ChatData = {
       id: chat.id,
       projectId: chat.projectId,
       userId: chat.userId,
       messages,
-      projectInfo: (chat.projectInfo as any) ?? {},
+      projectInfo: chat.projectInfo as Record<string, any> ?? {},
       persona: chat.persona ?? undefined,
       currentTab: chat.currentTab ?? undefined,
       tabContent,
@@ -71,24 +75,36 @@ export async function GET(
     };
 
     return NextResponse.json({ success: true, data });
-    
-  } catch (error: any) {
+
+  } catch (error: unknown) {
     // Create safe error details for logging
-    const errorDetails = {
-      message: error?.message || (error instanceof Error ? error.toString() : 'Unknown error'),
-      type: error?.constructor?.name || typeof error,
-      code: error?.code,
-      name: error?.name
-    };
-    
+    let message = 'Failed to load chat data';
+    let type: string = typeof error;
+    let code: string | undefined;
+    let name: string | undefined;
+
+    if (error instanceof Error) {
+      message = error.message || message;
+      type = error.constructor.name || type;
+      name = error.name;
+    } else if (typeof error === 'object' && error !== null) {
+      const errObj = error as { message?: string; code?: string; name?: string; constructor?: { name?: string } };
+      message = errObj.message || message;
+      type = errObj.constructor?.name || type;
+      code = errObj.code;
+      name = errObj.name;
+    }
+
+    const errorDetails = { message, type, code, name };
+
     console.error('Error loading chat data:', errorDetails);
-    
+
     // Send a more detailed error message back to the client
     return NextResponse.json(
-      { 
-        success: false, 
-        error: errorDetails.message || 'Failed to load chat data',
-        errorType: errorDetails.type
+      {
+        success: false,
+        error: message,
+        errorType: type
       },
       { status: 500 }
     );

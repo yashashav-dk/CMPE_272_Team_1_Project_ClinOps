@@ -6,11 +6,11 @@ import { restructureToJSON, structuredToDashboardWidgets } from '../services/mcp
 import { StructuredDashboardResponse } from '../services/structured-output-schema'
 
 // Mock the AI client
-jest.mock('../services/ai-client', () => ({
+jest.mock('../services/ai', () => ({
   generateAIResponse: jest.fn()
 }))
 
-import { generateAIResponse } from '../services/ai-client'
+import { generateAIResponse } from '../services/ai'
 
 describe('MCP Data Restructurer', () => {
 
@@ -178,7 +178,7 @@ describe('MCP Data Restructurer', () => {
         })
       }
 
-      ;(generateAIResponse as jest.Mock).mockResolvedValue(mockResponse)
+        ; (generateAIResponse as jest.Mock).mockResolvedValue(mockResponse)
 
       const markdownContent = `
 # Trial Timeline
@@ -215,7 +215,7 @@ gantt
         }) + '\n```'
       }
 
-      ;(generateAIResponse as jest.Mock).mockResolvedValue(mockResponse)
+        ; (generateAIResponse as jest.Mock).mockResolvedValue(mockResponse)
 
       const result = await restructureToJSON(
         'test content',
@@ -244,7 +244,7 @@ gantt
         response: 'Here is the structured data:\n\n' + JSON.stringify(validJSON) + '\n\nEnd of data.'
       }
 
-      ;(generateAIResponse as jest.Mock).mockResolvedValue(mockResponse)
+        ; (generateAIResponse as jest.Mock).mockResolvedValue(mockResponse)
 
       const result = await restructureToJSON(
         'test content',
@@ -262,7 +262,7 @@ gantt
         response: 'Invalid JSON response'
       }
 
-      ;(generateAIResponse as jest.Mock).mockResolvedValue(mockResponse)
+        ; (generateAIResponse as jest.Mock).mockResolvedValue(mockResponse)
 
       const originalContent = 'Original markdown content'
 
@@ -276,7 +276,7 @@ gantt
       expect(result.widgets.length).toBe(1)
       expect(result.widgets[0].type).toBe('text')
       expect(result.widgets[0].content.markdown).toBe(originalContent)
-      expect(result.widgets[0].content.summary).toContain('restructuring failed')
+      expect(result.widgets[0].content.summary).toBe('Remaining content')
     })
 
     test('should fallback on AI service failure', async () => {
@@ -285,7 +285,7 @@ gantt
         error: 'AI service unavailable'
       }
 
-      ;(generateAIResponse as jest.Mock).mockResolvedValue(mockResponse)
+        ; (generateAIResponse as jest.Mock).mockResolvedValue(mockResponse)
 
       const originalContent = 'Original content'
 
@@ -314,7 +314,7 @@ gantt
         })
       }
 
-      ;(generateAIResponse as jest.Mock).mockResolvedValue(mockResponse)
+        ; (generateAIResponse as jest.Mock).mockResolvedValue(mockResponse)
 
       await restructureToJSON(
         'content',

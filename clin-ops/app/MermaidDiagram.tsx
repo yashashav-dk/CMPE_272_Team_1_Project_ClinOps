@@ -117,12 +117,18 @@ Please provide only the corrected Mermaid diagram code with proper syntax, enclo
 1. All node labels with special characters are properly quoted
 2. Remove any trailing semicolons
 3. Use proper Mermaid syntax
-4. Keep the same diagram structure and content
-5. Fix any syntax issues that would cause parsing errors
+4. Preserve the original diagram's intent, structure, and level of detail (do NOT replace it with a generic template)
+5. Fix only the syntax issues that would cause parsing errors
 
-Return only the corrected diagram code, nothing else.`
+Return only the corrected diagram code, nothing else (no explanations or commentary).`
 
-      const result = await generateAIResponse(fixPrompt)
+      const result = await generateAIResponse({
+        prompt: fixPrompt,
+        forceRefresh: true,
+        projectId: projectId || 'diagram-fix',
+        persona: 'diagramFixer',
+        tabType: contextInfo || 'diagram'
+      })
 
       if (result.success && result.response) {
         // Extract the diagram code from the response
@@ -242,44 +248,120 @@ Return only the corrected diagram code, nothing else.`
           cleanChart = `flowchart TD\n${cleanChart}`;
         }
       }
-      
-      // Fix common Mermaid syntax issues that cause parsing errors
-      cleanChart = cleanChart
-        // Remove trailing semicolons which can cause issues
-        .replace(/;\s*$/gm, '')
-        // Fix parentheses inside square brackets - replace with quotes
-        .replace(/\[([^\[]*)\(([^)]*)\)([^\]]*)\]/g, '["$1($2)$3"]')
-        // Fix parentheses inside curly braces
-        .replace(/\{([^{}]*)\(([^)]*)\)([^{}]*)\}/g, '{"$1($2)$3"}')
-        // Fix spaces in node IDs by wrapping problematic labels in quotes
-        .replace(/-->\s*([A-Za-z_][A-Za-z0-9_]*)\[(.*?)\]/g, (match, nodeId, label) => {
-          // If label contains problematic characters, wrap in quotes
-          if (/[()\/\-\s]/.test(label)) {
-            return `--> ${nodeId}["${label}"]`;
-          }
-          return match;
-        })
-        // Fix problematic characters in flowchart node definitions
-        .replace(/([A-Za-z_][A-Za-z0-9_]*)\[([^\[]*[()\/\-][^\]]*)\]/g, '$1["$2"]')
-        .replace(/([A-Za-z_][A-Za-z0-9_]*)\(([^()]*[\/\-][^()]*)\)/g, '$1("$2")')
-        .replace(/([A-Za-z_][A-Za-z0-9_]*)\{([^{}]*[()\/\-][^{}]*)\}/g, '$1{"$2"}')
-        // Fix subgraph syntax issues
-        .replace(/subgraph\s+([^\{\n]*)\s*\n\s*([^;]+);\s*end/gm, (match, title, nodes) => {
-          const nodeList = nodes.split(';').map((n: string) => n.trim()).filter((n: string) => n).join('\n        ');
-          return `subgraph ${title}\n        ${nodeList}\n    end`;
-        })
 
-      // Gantt-specific cleanup: fix invalid 'section <title>: <rest>' lines
-      if (/^\s*gantt\b/i.test(cleanChart)) {
-        // Split lines where a colon follows the section title into a new line for the rest
+      // Targeted fix: normalize edges like `D -- U.S. Sites -- G[...]` to `D --> G[...]`
+      // This pattern (node -- label -- node[label]) is not valid Mermaid edge syntax
+      cleanChart = cleanChart.replace(
+        /\b([A-Za-z0-9_]+)\s*--\s*[^-\n]+?\s*--\s*([A-Za-z0-9_]+)(\[[^\]]*\])/g,
+        '$1 --> $2$3'
+      );
+
+      // Ensure any standalone `end` keyword is on its own line
+      // This is critical for sequence diagrams with rect blocks
+      // Process line by line to properly handle 'end' keywords
+      const lines = cleanChart.split('\n');
+      const processedLines = [];
+      
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        
+        // Check if this line has 'end' keyword that's not part of a string
+        // Match 'end' that comes after a quoted string or other content
+        const endMatch = line.match(/^(.*["'])\s*end\s*$/i);
+        if (endMatch) {
+          // Split: keep the content before 'end', and put 'end' on next line
+          processedLines.push(endMatch[1]);
+          processedLines.push('    end');
+          continue;
+        }
+        
+        // Also check for 'end' attached without space after quote or bracket
+        const attachedEndMatch = line.match(/^(.*["'\]\)])end\s*$/i);
+        if (attachedEndMatch) {
+          processedLines.push(attachedEndMatch[1]);
+          processedLines.push('    end');
+          continue;
+        }
+        
+        // Keep line as-is if no issue found
+        processedLines.push(line);
+      }
+      
+      cleanChart = processedLines.join('\n');
+
+      // Additional safety: comment out stray plain-text lines that are not valid Mermaid syntax
+      // This prevents narrative lines like "Site Initiation Visit (SIV) & Tech Qualifi..." from
+      // causing parse errors while keeping actual diagram definitions intact.
+      const diagramLines = cleanChart.split('\n');
+      const finalProcessedLines = diagramLines.map((line) => {
+        const trimmed = line.trim();
+        if (!trimmed) return line;
+
+        // Keep known directive / structure lines as-is
+        // Note: Added support for sequence diagram keywords like Note, participant, rect, etc.
+        if (/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitgraph|mindmap|timeline|sankey|xychart|quadrantChart|requirement|subgraph|end|section|click|style|link|accTitle|accDescr|accDescription|axisFormat|participant|actor|Note|rect|activate|deactivate|loop|alt|opt|par|autonumber|title|destroy|box|critical|break)\b/i.test(trimmed)) {
+          return line;
+        }
+
+        // Keep lines that clearly contain edges or node definitions  
+        if (/[<>-]{2,}|==>|:::|\[.*\]|\{.*\}|->>|-->>/.test(trimmed)) {
+          return line;
+        }
+
+        // Keep lines with rgb/rgba colors (for rect blocks)
+        if (/rgb\(|rgba\(/.test(trimmed)) {
+          return line;
+        }
+
+        // Otherwise, treat as a comment so Mermaid ignores it
+        return `%% ${line}`;
+      });
+
+      cleanChart = finalProcessedLines.join('\n');
+
+      // NOTE: The aggressive auto-fix regex chain below is intentionally disabled
+      // because it was over-correcting valid Mermaid diagrams and causing
+      // widespread syntax errors across tabs. We keep the code for potential
+      // future tuning, but it is not executed.
+      if (false) {
+        // Fix common Mermaid syntax issues that cause parsing errors
         cleanChart = cleanChart
-          .replace(/^(\s*section\s+)([^\n:]+):\s*(.+)$/gmi, (m, prefix, title, rest) => {
-            const safeTitle = String(title).trim();
-            const nextLine = String(rest).trim();
-            return `${prefix}${safeTitle}\n${nextLine}`;
+          // Remove trailing semicolons which can cause issues
+          .replace(/;\s*$/gm, '')
+          // Fix parentheses inside square brackets - replace with quotes
+          .replace(/\[([^\[]*)\(([^)]*)\)([^\]]*)\]/g, '["$1($2)$3"]')
+          // Fix parentheses inside curly braces
+          .replace(/\{([^{}]*)\(([^)]*)\)([^{}]*)\}/g, '{"$1($2)$3"}')
+          // Fix spaces in node IDs by wrapping problematic labels in quotes
+          .replace(/-->\s*([A-Za-z_][A-Za-z0-9_]*)\[(.*?)\]/g, (match, nodeId, label) => {
+            // If label contains problematic characters, wrap in quotes
+            if (/[()\/\-\s]/.test(label)) {
+              return `--> ${nodeId}["${label}"]`;
+            }
+            return match;
           })
-          // Remove trailing colon on pure section lines like 'section Title:'
-          .replace(/^(\s*section\s+)(.+?):\s*$/gmi, '$1$2');
+          // Fix problematic characters in flowchart node definitions
+          .replace(/([A-Za-z_][A-Za-z0-9_]*)\[([^\[]*[()\/\-][^\]]*)\]/g, '$1["$2"]')
+          .replace(/([A-Za-z_][A-Za-z0-9_]*)\(([^()]*[\/\-][^()]*)\)/g, '$1("$2")')
+          .replace(/([A-Za-z_][A-Za-z0-9_]*)\{([^{}]*[()\/\-][^{}]*)\}/g, '$1{"$2"}')
+          // Fix subgraph syntax issues
+          .replace(/subgraph\s+([^\{\n]*)\s*\n\s*([^;]+);\s*end/gm, (match, title, nodes) => {
+            const nodeList = nodes.split(';').map((n: string) => n.trim()).filter((n: string) => n).join('\n        ');
+            return `subgraph ${title}\n        ${nodeList}\n    end`;
+          })
+
+        // Gantt-specific cleanup: fix invalid 'section <title>: <rest>' lines
+        if (/^\s*gantt\b/i.test(cleanChart)) {
+          // Split lines where a colon follows the section title into a new line for the rest
+          cleanChart = cleanChart
+            .replace(/^(\s*section\s+)([^\n:]+):\s*(.+)$/gmi, (m, prefix, title, rest) => {
+              const safeTitle = String(title).trim();
+              const nextLine = String(rest).trim();
+              return `${prefix}${safeTitle}\n${nextLine}`;
+            })
+            // Remove trailing colon on pure section lines like 'section Title:'
+            .replace(/^(\s*section\s+)(.+?):\s*$/gmi, '$1$2');
+        }
       }
       
       // Generate unique ID for this diagram
@@ -484,4 +566,14 @@ Return only the corrected diagram code, nothing else.`
   )
 }
 
-export default MermaidDiagram 
+// Wrap with React.memo to prevent re-renders when props haven't changed
+// This ensures that fixing/refreshing one diagram doesn't trigger re-renders of other diagrams
+export default React.memo(MermaidDiagram, (prevProps, nextProps) => {
+  // Only re-render if the chart content or other props have actually changed
+  return (
+    prevProps.chart === nextProps.chart &&
+    prevProps.projectId === nextProps.projectId &&
+    prevProps.contextInfo === nextProps.contextInfo &&
+    prevProps.className === nextProps.className
+  );
+}) 
