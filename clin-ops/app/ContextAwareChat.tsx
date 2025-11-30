@@ -852,6 +852,7 @@ Use diagram types like flowchart, sequenceDiagram, erDiagram, classDiagram, gant
 
     // Accept any non-empty answer
     if (userMessage.trim().length > 0) {
+      const prevAnsweredCount = projectQuestions.filter(q => q.answered).length;
       const updatedQuestions = [...projectQuestions];
       updatedQuestions[currentQuestionIndex] = {
         ...currentQuestion,
@@ -860,6 +861,19 @@ Use diagram types like flowchart, sequenceDiagram, erDiagram, classDiagram, gant
       };
 
       setProjectQuestions(updatedQuestions);
+
+      const newAnsweredCount = updatedQuestions.filter(q => q.answered).length;
+
+      if (prevAnsweredCount < 3 && newAnsweredCount >= 3) {
+        const widgetsUnlockedMessage = {
+          text: 'widgets unlocked now',
+          sender: 'ai' as const,
+          persona: currentPersona
+        };
+
+        setMessages(prev => [...prev, widgetsUnlockedMessage]);
+        setConversationHistory(prev => [...prev, `AI: ${widgetsUnlockedMessage.text}`]);
+      }
 
       // Immediately save after answering a question
       const projectInfo: Record<string, string> = {};
@@ -1336,6 +1350,12 @@ Please provide the updated content that addresses the change request while maint
     // Skip for the general tab
     if (currentTab === 'general') return;
 
+    const answeredCount = projectQuestions.filter(q => q.answered).length;
+    if (answeredCount < 3) {
+      alert('please answer atleast 3 questions');
+      return;
+    }
+
     const tabKey = `${currentPersona}-${currentTab}`;
     const content = tabContent[tabKey];
 
@@ -1385,6 +1405,12 @@ Please provide the updated content that addresses the change request while maint
   const handleGenerateStructured = async () => {
     // Skip for the general tab
     if (currentTab === 'general') return;
+
+    const answeredCount = projectQuestions.filter(q => q.answered).length;
+    if (answeredCount < 3) {
+      alert('please answer atleast 3 questions');
+      return;
+    }
 
     const tabKey = `${currentPersona}-${currentTab}`;
 
@@ -1500,6 +1526,19 @@ Please provide the updated content that addresses the change request while maint
           ></div>
         </div>
 
+        {answeredCount >= 3 && (
+          <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-700">
+            <div>
+              <div className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
+                Widgets unlocked
+              </div>
+              <div className="text-xs text-emerald-800 dark:text-emerald-200">
+                Your first dashboard widgets are now available based on these answers.
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Questions list */}
         <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm mb-4">
           <h4 className="text-sm font-semibold mb-2">Essential Questions</h4>
@@ -1552,6 +1591,8 @@ Please provide the updated content that addresses the change request while maint
 
     const tabKey = `${currentPersona}-${currentTab}`;
     const generationStatus = tabContentGeneration[tabKey];
+    const answeredCount = projectQuestions.filter(q => q.answered).length;
+    const widgetsLocked = answeredCount < 3;
 
     return (
       <div className="p-3 h-full overflow-auto">
@@ -1564,7 +1605,7 @@ Please provide the updated content that addresses the change request while maint
               <>
                 <button
                   onClick={handleRefreshTabContent}
-                  className="text-sm flex items-center gap-1 text-indigo-500 hover:text-indigo-700"
+                  className="text-sm flex items-center gap-1 text-indigo-500 hover;text-indigo-700"
                   disabled={isTabContentLoading}
                 >
                   <HiRefresh className={`h-3 w-3 ${isTabContentLoading ? 'animate-spin' : ''}`} />
@@ -1574,10 +1615,21 @@ Please provide the updated content that addresses the change request while maint
                 {user && (
                   <>
                     <button
-                      onClick={() => handleSendToDashboard(true)}
-                      className="text-sm flex items-center gap-1 bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-1 rounded"
+                      onClick={() => {
+                        const answeredCount = projectQuestions.filter(q => q.answered).length;
+                        if (answeredCount < 3) {
+                          alert('please answer atleast 3 questions');
+                          return;
+                        }
+                        handleSendToDashboard(true);
+                      }}
+                      className={`text-sm flex items-center gap-1 text-white px-2 py-1 rounded ${
+                        widgetsLocked || isSendingToDashboard || isTabContentLoading
+                          ? 'bg-indigo-400 cursor-default opacity-60'
+                          : 'bg-indigo-500 hover:bg-indigo-600'
+                      }`}
                       disabled={isSendingToDashboard || isTabContentLoading}
-                      title="Generate structured dashboard widgets using AI (Recommended)"
+                      title={widgetsLocked ? 'please answer atleast 3 questions' : 'Generate structured dashboard widgets using AI (Recommended)'}
                     >
                       <HiViewGrid className="h-3 w-3" />
                       <span>
@@ -1739,6 +1791,9 @@ Please provide the updated content that addresses the change request while maint
     )
   }
 
+  const answeredCountForTabs = projectQuestions.filter(q => q.answered).length;
+  const navTabsLocked = answeredCountForTabs < 3;
+
   return (
     <div className="ai-chat-container flex h-full flex-col">
       {/* Top Section - Tabs and Persona Selection */}
@@ -1756,32 +1811,72 @@ Please provide the updated content that addresses the change request while maint
             /* Trial Coordinator Tabs */
             <>
               <button
-                className={getTabClasses('trialOverview')}
-                onClick={() => setCurrentTab('trialOverview')}
+                className={`${getTabClasses('trialOverview')} ${navTabsLocked ? 'opacity-60 cursor-default' : ''}`}
+                disabled={navTabsLocked}
+                title={navTabsLocked ? 'please answer atleast 3 questions' : undefined}
+                onClick={() => {
+                  if (navTabsLocked) {
+                    alert('please answer atleast 3 questions');
+                    return;
+                  }
+                  setCurrentTab('trialOverview');
+                }}
               >
                 Trial Overview
               </button>
               <button
-                className={getTabClasses('taskChecklists')}
-                onClick={() => setCurrentTab('taskChecklists')}
+                className={`${getTabClasses('taskChecklists')} ${navTabsLocked ? 'opacity-60 cursor-default' : ''}`}
+                disabled={navTabsLocked}
+                title={navTabsLocked ? 'please answer atleast 3 questions' : undefined}
+                onClick={() => {
+                  if (navTabsLocked) {
+                    alert('please answer atleast 3 questions');
+                    return;
+                  }
+                  setCurrentTab('taskChecklists');
+                }}
               >
                 Task Checklists
               </button>
               <button
-                className={getTabClasses('teamWorkflows')}
-                onClick={() => setCurrentTab('teamWorkflows')}
+                className={`${getTabClasses('teamWorkflows')} ${navTabsLocked ? 'opacity-60 cursor-default' : ''}`}
+                disabled={navTabsLocked}
+                title={navTabsLocked ? 'please answer atleast 3 questions' : undefined}
+                onClick={() => {
+                  if (navTabsLocked) {
+                    alert('please answer atleast 3 questions');
+                    return;
+                  }
+                  setCurrentTab('teamWorkflows');
+                }}
               >
                 Team Workflows
               </button>
               <button
-                className={getTabClasses('trialTimeline')}
-                onClick={() => setCurrentTab('trialTimeline')}
+                className={`${getTabClasses('trialTimeline')} ${navTabsLocked ? 'opacity-60 cursor-default' : ''}`}
+                disabled={navTabsLocked}
+                title={navTabsLocked ? 'please answer atleast 3 questions' : undefined}
+                onClick={() => {
+                  if (navTabsLocked) {
+                    alert('please answer atleast 3 questions');
+                    return;
+                  }
+                  setCurrentTab('trialTimeline');
+                }}
               >
                 Trial Timeline
               </button>
               <button
-                className={getTabClasses('qualityMetrics')}
-                onClick={() => setCurrentTab('qualityMetrics')}
+                className={`${getTabClasses('qualityMetrics')} ${navTabsLocked ? 'opacity-60 cursor-default' : ''}`}
+                disabled={navTabsLocked}
+                title={navTabsLocked ? 'please answer atleast 3 questions' : undefined}
+                onClick={() => {
+                  if (navTabsLocked) {
+                    alert('please answer atleast 3 questions');
+                    return;
+                  }
+                  setCurrentTab('qualityMetrics');
+                }}
               >
                 Quality Metrics
               </button>
@@ -1790,38 +1885,86 @@ Please provide the updated content that addresses the change request while maint
             /* Regulatory Advisor Tabs */
             <>
               <button
-                className={getTabClasses('protocolRequirements')}
-                onClick={() => setCurrentTab('protocolRequirements')}
+                className={`${getTabClasses('protocolRequirements')} ${navTabsLocked ? 'opacity-60 cursor-default' : ''}`}
+                disabled={navTabsLocked}
+                title={navTabsLocked ? 'please answer atleast 3 questions' : undefined}
+                onClick={() => {
+                  if (navTabsLocked) {
+                    alert('please answer atleast 3 questions');
+                    return;
+                  }
+                  setCurrentTab('protocolRequirements');
+                }}
               >
                 Protocol Requirements
               </button>
               <button
-                className={getTabClasses('documentControl')}
-                onClick={() => setCurrentTab('documentControl')}
+                className={`${getTabClasses('documentControl')} ${navTabsLocked ? 'opacity-60 cursor-default' : ''}`}
+                disabled={navTabsLocked}
+                title={navTabsLocked ? 'please answer atleast 3 questions' : undefined}
+                onClick={() => {
+                  if (navTabsLocked) {
+                    alert('please answer atleast 3 questions');
+                    return;
+                  }
+                  setCurrentTab('documentControl');
+                }}
               >
                 Document Control
               </button>
               <button
-                className={getTabClasses('complianceDiagrams')}
-                onClick={() => setCurrentTab('complianceDiagrams')}
+                className={`${getTabClasses('complianceDiagrams')} ${navTabsLocked ? 'opacity-60 cursor-default' : ''}`}
+                disabled={navTabsLocked}
+                title={navTabsLocked ? 'please answer atleast 3 questions' : undefined}
+                onClick={() => {
+                  if (navTabsLocked) {
+                    alert('please answer atleast 3 questions');
+                    return;
+                  }
+                  setCurrentTab('complianceDiagrams');
+                }}
               >
                 Compliance Diagrams
               </button>
               <button
-                className={getTabClasses('riskControls')}
-                onClick={() => setCurrentTab('riskControls')}
+                className={`${getTabClasses('riskControls')} ${navTabsLocked ? 'opacity-60 cursor-default' : ''}`}
+                disabled={navTabsLocked}
+                title={navTabsLocked ? 'please answer atleast 3 questions' : undefined}
+                onClick={() => {
+                  if (navTabsLocked) {
+                    alert('please answer atleast 3 questions');
+                    return;
+                  }
+                  setCurrentTab('riskControls');
+                }}
               >
                 Risk & Controls
               </button>
               <button
-                className={getTabClasses('auditPreparation')}
-                onClick={() => setCurrentTab('auditPreparation')}
+                className={`${getTabClasses('auditPreparation')} ${navTabsLocked ? 'opacity-60 cursor-default' : ''}`}
+                disabled={navTabsLocked}
+                title={navTabsLocked ? 'please answer atleast 3 questions' : undefined}
+                onClick={() => {
+                  if (navTabsLocked) {
+                    alert('please answer atleast 3 questions');
+                    return;
+                  }
+                  setCurrentTab('auditPreparation');
+                }}
               >
                 Audit Preparation
               </button>
               <button
-                className={getTabClasses('smartAlerts')}
-                onClick={() => setCurrentTab('smartAlerts')}
+                className={`${getTabClasses('smartAlerts')} ${navTabsLocked ? 'opacity-60 cursor-default' : ''}`}
+                disabled={navTabsLocked}
+                title={navTabsLocked ? 'please answer atleast 3 questions' : undefined}
+                onClick={() => {
+                  if (navTabsLocked) {
+                    alert('please answer atleast 3 questions');
+                    return;
+                  }
+                  setCurrentTab('smartAlerts');
+                }}
               >
                 Smart Alerts
               </button>

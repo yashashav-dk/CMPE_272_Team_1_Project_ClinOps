@@ -34,9 +34,13 @@ body {
   --animate-shimmer: shimmer 2s infinite;
 }
 
-button,
+button:not(:disabled),
 [role="button"],
 .tab-button,
 .button-hover {
   cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
 }
