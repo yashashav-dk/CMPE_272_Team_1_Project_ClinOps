@@ -33,3 +33,10 @@ body {
 @theme {
   --animate-shimmer: shimmer 2s infinite;
 }
+
+button,
+[role="button"],
+.tab-button,
+.button-hover {
+  cursor: pointer;
+}
