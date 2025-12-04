@@ -1,7 +1,5 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import { restructureToJSON, structuredToDashboardWidgets } from './mcp-data-restructurer';
-import { StructuredDashboardResponse } from './structured-output-schema';
 
 // Define types for our parsed data
 interface ParsedTab {

@@ -34,10 +34,8 @@ describe('AI Chat Service', () => {
     describe('saveChatData', () => {
         test('should successfully save chat data', async () => {
             const mockResponse = {
-                data: {
-                    success: true,
-                    data: { id: 'chat-1' }
-                }
+                success: true,
+                data: { id: 'chat-1' }
             }
                 ; (req.post as jest.Mock).mockResolvedValue(mockResponse)
 
@@ -48,21 +46,19 @@ describe('AI Chat Service', () => {
                 userId: mockUserId,
                 messages: mockMessages
             }))
-            expect(result).toEqual({ id: 'chat-1' })
+            expect(result).toEqual(mockResponse)
         })
 
         test('should handle nested response structure', async () => {
             const mockResponse = {
-                data: {
-                    success: true,
-                    message: 'Saved'
-                }
+                success: true,
+                message: 'Saved'
             }
                 ; (req.post as jest.Mock).mockResolvedValue(mockResponse)
 
             const result = await saveChatData(mockProjectId, mockUserId, mockMessages)
 
-            expect(result).toEqual({ success: true, message: 'Saved' })
+            expect(result).toEqual(mockResponse)
         })
 
         test('should handle API errors', async () => {
@@ -85,10 +81,9 @@ describe('AI Chat Service', () => {
     describe('loadChatData', () => {
         test('should successfully load chat data', async () => {
             const mockResponse = {
+                success: true,
                 data: {
-                    data: {
-                        messages: mockMessages
-                    }
+                    messages: mockMessages
                 }
             }
                 ; (req.get as jest.Mock).mockResolvedValue(mockResponse)
@@ -96,7 +91,7 @@ describe('AI Chat Service', () => {
             const result = await loadChatData(mockProjectId)
 
             expect(req.get).toHaveBeenCalledWith(`/api/ai/chat/${mockProjectId}`)
-            expect(result).toEqual({ messages: mockMessages })
+            expect(result).toEqual(mockResponse)
         })
 
         test('should handle API errors', async () => {
@@ -113,16 +108,14 @@ describe('AI Chat Service', () => {
     describe('clearChatData', () => {
         test('should successfully clear chat data', async () => {
             const mockResponse = {
-                data: {
-                    success: true
-                }
+                success: true
             }
                 ; (req.put as jest.Mock).mockResolvedValue(mockResponse)
 
             const result = await clearChatData(mockProjectId)
 
             expect(req.put).toHaveBeenCalledWith(`/api/ai/chat/clear/${mockProjectId}`)
-            expect(result).toEqual({ success: true })
+            expect(result).toEqual(mockResponse)
         })
     })
 

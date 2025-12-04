@@ -39,8 +39,6 @@ interface AdvancedTableProps {
 export default function AdvancedTable({
   data,
   headers,
-  widgetId,
-  projectId,
   title,
   enableSearch = true,
   enablePagination = true,
@@ -153,7 +151,7 @@ export default function AdvancedTable({
                 {showColumnSelector ? <HiEyeOff className="w-4 h-4" /> : <HiEye className="w-4 h-4" />}
                 Columns
               </button>
-              
+
               {showColumnSelector && (
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-10 p-2">
                   <div className="space-y-1 max-h-64 overflow-y-auto">
@@ -205,9 +203,8 @@ export default function AdvancedTable({
                   >
                     {header.isPlaceholder ? null : (
                       <div
-                        className={`flex items-center gap-2 ${
-                          header.column.getCanSort() ? 'cursor-pointer select-none' : ''
-                        }`}
+                        className={`flex items-center gap-2 ${header.column.getCanSort() ? 'cursor-pointer select-none' : ''
+                          }`}
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
@@ -283,7 +280,7 @@ export default function AdvancedTable({
               <HiChevronLeft className="w-4 h-4" />
               Previous
             </button>
-            
+
             <div className="flex items-center gap-1">
               {Array.from({ length: table.getPageCount() }, (_, i) => i).map((pageIndex) => {
                 // Show first page, last page, current page, and pages around current
@@ -305,11 +302,10 @@ export default function AdvancedTable({
                   <button
                     key={pageIndex}
                     onClick={() => table.setPageIndex(pageIndex)}
-                    className={`px-3 py-2 text-sm rounded-lg ${
-                      pageIndex === currentPage
+                    className={`px-3 py-2 text-sm rounded-lg ${pageIndex === currentPage
                         ? 'bg-indigo-600 text-white'
                         : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                    }`}
+                      }`}
                   >
                     {pageIndex + 1}
                   </button>

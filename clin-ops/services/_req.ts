@@ -2,19 +2,11 @@
 // If BASE_URL is empty, requests will go to the current origin (which is what we want)
 const BASE_URL = process.env.NEXT_PUBLIC_BE_GATEWAY || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
 
-interface ApiError {
-  response: {
-    data: {
-      error: string;
-    };
-  };
-}
-
 export const req = {
   async post<T = any>(endpoint: string, data: unknown): Promise<T> {
     console.log(`Making POST request to: ${endpoint}`);
     console.log('Request payload:', data);
-    
+
     // Check specifically for userId in chat save requests
     if (endpoint === '/api/ai/chat/save' && typeof data === 'object' && data !== null) {
       const payload = data as any;
@@ -22,7 +14,7 @@ export const req = {
       console.log('Chat save payload check - userId:', payload.userId);
       console.log('Chat save payload keys:', Object.keys(payload));
     }
-    
+
     try {
       const response = await fetch(`${BASE_URL}${endpoint}`, {
         method: 'POST',

@@ -1,3 +1,4 @@
+
 'use client'
 
 import React, { useState } from 'react'
@@ -19,19 +20,6 @@ export default function InteractiveChecklist({ items, listType = 'checklist' }: 
   const [filterPriority, setFilterPriority] = useState<string>('all')
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'priority' | 'status' | 'none'>('none')
-
-  const getPriorityColor = (priority?: string) => {
-    switch (priority) {
-      case 'high':
-        return 'text-red-600 dark:text-red-400'
-      case 'medium':
-        return 'text-yellow-600 dark:text-yellow-400'
-      case 'low':
-        return 'text-green-600 dark:text-green-400'
-      default:
-        return 'text-gray-500 dark:text-gray-400'
-    }
-  }
 
   const getPriorityBadge = (priority?: string) => {
     switch (priority) {
@@ -99,16 +87,15 @@ export default function InteractiveChecklist({ items, listType = 'checklist' }: 
         <div className="flex flex-wrap gap-2 items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-3">
           <div className="flex flex-wrap gap-2 items-center">
             <IoFilter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-            
+
             {priorities.length > 0 && (
               <div className="flex gap-1">
                 <button
                   onClick={() => setFilterPriority('all')}
-                  className={`px-2 py-1 text-xs rounded ${
-                    filterPriority === 'all'
+                  className={`px - 2 py - 1 text - xs rounded ${filterPriority === 'all'
                       ? 'bg-indigo-500 text-white'
                       : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
-                  }`}
+                    } `}
                 >
                   All Priority
                 </button>
@@ -116,11 +103,10 @@ export default function InteractiveChecklist({ items, listType = 'checklist' }: 
                   <button
                     key={priority}
                     onClick={() => setFilterPriority(priority || 'all')}
-                    className={`px-2 py-1 text-xs rounded flex items-center gap-1 ${
-                      filterPriority === priority
+                    className={`px - 2 py - 1 text - xs rounded flex items - center gap - 1 ${filterPriority === priority
                         ? getPriorityBadge(priority)
                         : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
-                    }`}
+                      } `}
                   >
                     {getPriorityIcon(priority)}
                     {priority}
@@ -133,11 +119,10 @@ export default function InteractiveChecklist({ items, listType = 'checklist' }: 
               <div className="flex gap-1">
                 <button
                   onClick={() => setFilterCategory('all')}
-                  className={`px-2 py-1 text-xs rounded ${
-                    filterCategory === 'all'
+                  className={`px - 2 py - 1 text - xs rounded ${filterCategory === 'all'
                       ? 'bg-indigo-500 text-white'
                       : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
-                  }`}
+                    } `}
                 >
                   All Categories
                 </button>
@@ -145,11 +130,10 @@ export default function InteractiveChecklist({ items, listType = 'checklist' }: 
                   <button
                     key={category}
                     onClick={() => setFilterCategory(category || 'all')}
-                    className={`px-2 py-1 text-xs rounded ${
-                      filterCategory === category
+                    className={`px - 2 py - 1 text - xs rounded ${filterCategory === category
                         ? 'bg-indigo-500 text-white'
                         : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
-                    }`}
+                      } `}
                   >
                     {category}
                   </button>
@@ -180,11 +164,10 @@ export default function InteractiveChecklist({ items, listType = 'checklist' }: 
           filteredItems.map((item, idx) => (
             <div
               key={idx}
-              className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${
-                item.checked
+              className={`flex items - start gap - 3 p - 3 rounded - lg border transition - all ${item.checked
                   ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'
                   : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:shadow-sm'
-              }`}
+                } `}
             >
               {/* Checkbox Icon */}
               <div className="flex-shrink-0 mt-0.5">
@@ -199,19 +182,18 @@ export default function InteractiveChecklist({ items, listType = 'checklist' }: 
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <span
-                    className={`text-sm ${
-                      item.checked
+                    className={`text - sm ${item.checked
                         ? 'line-through text-gray-500 dark:text-gray-400'
                         : 'text-gray-900 dark:text-gray-100'
-                    }`}
+                      } `}
                   >
-                    {listType === 'numbered' && `${idx + 1}. `}
+                    {listType === 'numbered' && `${idx + 1}.`}
                     {item.text}
                   </span>
-                  
+
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {item.priority && (
-                      <span className={`px-2 py-0.5 text-xs rounded-full flex items-center gap-1 ${getPriorityBadge(item.priority)}`}>
+                      <span className={`px - 2 py - 0.5 text - xs rounded - full flex items - center gap - 1 ${getPriorityBadge(item.priority)} `}>
                         {getPriorityIcon(item.priority)}
                         {item.priority}
                       </span>
@@ -240,12 +222,11 @@ export default function InteractiveChecklist({ items, listType = 'checklist' }: 
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
             <div
-              className={`h-2.5 rounded-full transition-all duration-500 ${
-                completionPercentage === 100
+              className={`h - 2.5 rounded - full transition - all duration - 500 ${completionPercentage === 100
                   ? 'bg-green-500'
                   : 'bg-gradient-to-r from-blue-500 to-indigo-500'
-              }`}
-              style={{ width: `${completionPercentage}%` }}
+                } `}
+              style={{ width: `${completionPercentage}% ` }}
             />
           </div>
         </div>

@@ -119,7 +119,7 @@ export async function saveChatData(
             safeErrorDetails.responseData = JSON.stringify(error.response.data);
           }
         }
-      } catch (jsonError) {
+      } catch {
         safeErrorDetails.responseDataError = 'Could not serialize response data';
       }
     }
@@ -179,7 +179,7 @@ export async function loadChatData(projectId: string): Promise<ChatApiResponse> 
             safeErrorDetails.responseData = JSON.stringify(error.response.data);
           }
         }
-      } catch (jsonError) {
+      } catch {
         safeErrorDetails.responseDataError = 'Could not serialize response data';
       }
     }
@@ -239,7 +239,7 @@ export async function clearChatData(projectId: string): Promise<ChatApiResponse>
             safeErrorDetails.responseData = JSON.stringify(error.response.data);
           }
         }
-      } catch (jsonError) {
+      } catch {
         safeErrorDetails.responseDataError = 'Could not serialize response data';
       }
     }

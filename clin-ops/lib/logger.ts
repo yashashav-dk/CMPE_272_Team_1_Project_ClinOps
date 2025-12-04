@@ -21,8 +21,7 @@ export function getLogger(correlationId?: string) {
   if (!logger) {
     // Disable pino-pretty in development to avoid worker thread crashes
     // Use basic console logging instead
-    const isDev = process.env.NODE_ENV === 'development'
-    
+
     logger = pino({
       level: process.env.LOG_LEVEL || 'info',
       redact,

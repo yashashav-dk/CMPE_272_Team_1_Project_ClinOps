@@ -1,6 +1,4 @@
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
-import * as crypto from 'crypto';
-import { llmService, generatePromptHash } from './controller/AIController';
+import { llmService } from './controller/AIController';
 
 interface AIResponseOptions {
   temperature?: number;
@@ -38,10 +36,10 @@ export async function callExternalAI(
 ): Promise<AIResponseResult> {
   try {
     console.log('Generating AI response using enhanced Gemini service');
-    
+
     // Use the LLM service with retry logic
     const response = await llmService.generateResponse(prompt, options);
-    
+
     return {
       success: true,
       response,
@@ -49,7 +47,7 @@ export async function callExternalAI(
     };
   } catch (error: any) {
     console.error('Error calling enhanced Gemini service:', error);
-    
+
     return {
       success: false,
       error: error.message || 'Failed to generate AI response'
@@ -69,7 +67,7 @@ export async function generateAIResponse(
 ): Promise<AIResponseResult> {
   // Handle both old and new API formats
   let requestData: AIGenerateOptions;
-  
+
   if (typeof prompt === 'string') {
     // Legacy format
     requestData = {
@@ -81,7 +79,7 @@ export async function generateAIResponse(
     // New format with caching options
     requestData = prompt;
   }
-  
+
   console.log('Generating AI response for:', {
     promptLength: requestData.prompt.length,
     forceRefresh: requestData.forceRefresh,
@@ -89,7 +87,7 @@ export async function generateAIResponse(
     persona: requestData.persona,
     tabType: requestData.tabType
   });
-  
+
   // Call the external AI service
   return callExternalAI(requestData.prompt, requestData.options);
 }
@@ -110,6 +108,6 @@ export async function chatWithAI(
   const prompt = messages
     .map(msg => `${msg.role.toUpperCase()}: ${msg.content}`)
     .join('\n\n');
-  
+
   return generateAIResponse(prompt, options);
 } 

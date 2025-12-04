@@ -29,43 +29,43 @@ class GeminiProvider implements LLMProvider {
     const errorMessage = error?.message?.toLowerCase() || '';
     const errorCode = error?.code?.toLowerCase() || '';
     const errorString = error?.toString()?.toLowerCase() || '';
-    
-    return error?.status === 503 || 
-           error?.status === 429 ||
-           error?.status === 500 ||
-           errorMessage.includes('service unavailable') ||
-           errorMessage.includes('econnreset') ||
-           errorMessage.includes('timeout') ||
-           errorMessage.includes('rate limit') ||
-           errorMessage.includes('too many requests') ||
-           errorMessage.includes('enotfound') ||
-           errorMessage.includes('network') ||
-           errorMessage.includes('ssl') ||
-           errorMessage.includes('tls') ||
-           errorMessage.includes('bad record mac') ||
-           errorMessage.includes('connection reset') ||
-           errorMessage.includes('socket hang up') ||
-           errorString.includes('tls') ||
-           errorString.includes('ssl') ||
-           errorCode.includes('econnreset') ||
-           errorCode.includes('etimedout') ||
-           errorCode.includes('enotfound') ||
-           errorCode === 'err_ssl_wrong_version_number' ||
-           errorCode === 'eproto';
+
+    return error?.status === 503 ||
+      error?.status === 429 ||
+      error?.status === 500 ||
+      errorMessage.includes('service unavailable') ||
+      errorMessage.includes('econnreset') ||
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('rate limit') ||
+      errorMessage.includes('too many requests') ||
+      errorMessage.includes('enotfound') ||
+      errorMessage.includes('network') ||
+      errorMessage.includes('ssl') ||
+      errorMessage.includes('tls') ||
+      errorMessage.includes('bad record mac') ||
+      errorMessage.includes('connection reset') ||
+      errorMessage.includes('socket hang up') ||
+      errorString.includes('tls') ||
+      errorString.includes('ssl') ||
+      errorCode.includes('econnreset') ||
+      errorCode.includes('etimedout') ||
+      errorCode.includes('enotfound') ||
+      errorCode === 'err_ssl_wrong_version_number' ||
+      errorCode === 'eproto';
   }
 
   async generateResponse(prompt: string, options?: any): Promise<string> {
     let lastError: any;
-    
+
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
         if (!this.apiKey || this.apiKey.trim() === '') {
           throw new Error('Gemini API key is not configured');
         }
-        
+
         // Create a client with the API key
         const genAI = new GoogleGenerativeAI(this.apiKey);
-        
+
         // For text-only input, use the gemini-2.0-flash model
         const model = genAI.getGenerativeModel({ model: this.model });
 
@@ -91,7 +91,7 @@ class GeminiProvider implements LLMProvider {
 
         console.log(`Attempt ${attempt}/${this.maxRetries} - Sending request to Gemini API`);
         console.log('Using model:', this.model);
-        
+
         // Create the content with the proper role field
         const result = await model.generateContent({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
@@ -104,7 +104,7 @@ class GeminiProvider implements LLMProvider {
       } catch (error: any) {
         lastError = error;
         console.error(`Attempt ${attempt}/${this.maxRetries} - Error generating response from Gemini:`, error);
-        
+
         if (this.isRetryableError(error) && attempt < this.maxRetries) {
           // Exponential backoff
           const backoffTime = this.retryDelay * Math.pow(2, attempt - 1);
@@ -119,7 +119,7 @@ class GeminiProvider implements LLMProvider {
     // All retries failed or non-retryable error
     console.error('All attempts failed or non-retryable error');
     console.error('Error details:', JSON.stringify(lastError, null, 2));
-    
+
     if (lastError?.status === 503) {
       throw new Error('Gemini API service is currently unavailable. Please try again later.');
     } else {
@@ -130,9 +130,9 @@ class GeminiProvider implements LLMProvider {
 
 // Simple fallback provider when external APIs are unavailable
 class FallbackProvider implements LLMProvider {
-  async generateResponse(prompt: string, options?: any): Promise<string> {
+  async generateResponse(_prompt: string, _options?: any): Promise<string> {
     console.log('Using fallback response mechanism');
-    
+
     // Return a simple message acknowledging the system is in fallback mode
     return `I'm currently operating in fallback mode due to API unavailability. 
     
@@ -147,15 +147,15 @@ class LLMService {
   private provider: LLMProvider;
   private fallbackProvider: LLMProvider;
   private usesFallback: boolean = false;
-  
+
   constructor() {
     // Get the API key from environment variables (support both formats)
     const geminiApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
-    
+
     if (!geminiApiKey) {
       console.warn('WARNING: No Gemini API key found. Set GOOGLE_GENERATIVE_AI_API_KEY in your .env file');
     }
-    
+
     // Initialize providers
     this.provider = new GeminiProvider(geminiApiKey);
     this.fallbackProvider = new FallbackProvider();
@@ -165,7 +165,7 @@ class LLMService {
   setProvider(provider: LLMProvider): void {
     this.provider = provider;
   }
-  
+
   // Check if currently using fallback
   get isFallbackActive(): boolean {
     return this.usesFallback;
@@ -177,17 +177,17 @@ class LLMService {
       return await this.provider.generateResponse(prompt, options);
     } catch (error: any) {
       console.error('Primary AI provider failed, considering fallback:', error);
-      
+
       // Only use fallback for configuration errors, not for general errors
-      if (error.message?.includes('not configured') || 
-          error.message?.includes('API key') || 
-          error.message?.includes('missing key')) {
-        
+      if (error.message?.includes('not configured') ||
+        error.message?.includes('API key') ||
+        error.message?.includes('missing key')) {
+
         console.log('Switching to fallback provider due to configuration issue');
         this.usesFallback = true;
         return this.fallbackProvider.generateResponse(prompt, options);
       }
-      
+
       // For other errors, throw them for proper handling upstream
       throw error;
     }

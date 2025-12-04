@@ -1,12 +1,9 @@
 'use client'
 
 import React from 'react'
-import MermaidDiagram from '@/app/MermaidDiagram'
 import ReactMarkdown from 'react-markdown'
 import InteractiveTimeline from './InteractiveTimeline'
 import InteractiveWorkflow from './InteractiveWorkflow'
-import InteractiveChecklist from './InteractiveChecklist'
-import InteractiveTable from './InteractiveTable'
 import EnhancedInteractiveChecklist from './EnhancedInteractiveChecklist'
 import EnhancedMermaidViewer from './EnhancedMermaidViewer'
 import ChartWidget from './ChartWidget'
@@ -76,8 +73,8 @@ export default function WidgetRenderer({ widget, onDelete }: WidgetProps) {
 
       case 'list':
         return (
-          <EnhancedInteractiveChecklist 
-            items={widget.content.items} 
+          <EnhancedInteractiveChecklist
+            items={widget.content.items}
             listType={widget.content.listType}
             widgetId={widget.id}
             projectId={widget.projectId}
