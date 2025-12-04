@@ -331,7 +331,7 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
       if (projectId) {
         await saveChatData(
           projectId,
-          'default-user',
+          user?.id || 'default-user',
           messages as ChatMessageType[],
           projectInfo,
           currentPersona,
@@ -680,7 +680,7 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
     if (projectId && (Object.keys(projectInfo).length > 0 || messages.length > 1)) {
       autoSaveChatData(
         projectId,
-        'default-user',
+        user?.id || 'default-user',
         messages as ChatMessageType[],
         projectInfo,
         currentPersona,
@@ -1257,7 +1257,7 @@ Please provide the updated content that addresses the change request while maint
         const currentProjectInfo = getProjectInfo();
         saveChatData(
           projectId as string,
-          'default-user',
+          user?.id || 'default-user',
           messages as ChatMessageType[],
           currentProjectInfo,
           currentPersona,
@@ -1322,7 +1322,7 @@ Please provide the updated content that addresses the change request while maint
       const refreshProjectInfo = getProjectInfo();
       saveChatData(
         projectId as string,
-        'default-user',
+        user?.id || 'default-user',
         messages as ChatMessageType[],
         refreshProjectInfo,
         currentPersona,
@@ -1374,7 +1374,7 @@ Please provide the updated content that addresses the change request while maint
         },
         body: JSON.stringify({
           projectId: projectId || 'default-project',
-          userId: 'default-user',
+          userId: user?.id || 'default-user',
           tabType: currentTab,
           persona: currentPersona,
           content,
@@ -1426,7 +1426,7 @@ Please provide the updated content that addresses the change request while maint
         },
         body: JSON.stringify({
           projectId: projectId || 'default-project',
-          userId: 'default-user',
+          userId: user?.id || 'default-user',
           tabType: currentTab,
           persona: currentPersona,
           projectInfo
@@ -1612,35 +1612,30 @@ Please provide the updated content that addresses the change request while maint
                   <span>Refresh</span>
                 </button>
 
-                {user && (
-                  <>
-                    <button
-                      onClick={() => {
-                        const answeredCount = projectQuestions.filter(q => q.answered).length;
-                        if (answeredCount < 3) {
-                          alert('please answer atleast 3 questions');
-                          return;
-                        }
-                        handleSendToDashboard(true);
-                      }}
-                      className={`text-sm flex items-center gap-1 text-white px-2 py-1 rounded ${
-                        widgetsLocked || isSendingToDashboard || isTabContentLoading
-                          ? 'bg-indigo-400 cursor-default opacity-60'
-                          : 'bg-indigo-500 hover:bg-indigo-600'
-                      }`}
-                      disabled={isSendingToDashboard || isTabContentLoading}
-                      title={widgetsLocked ? 'please answer atleast 3 questions' : 'Generate structured dashboard widgets using AI (Recommended)'}
-                    >
-                      <HiViewGrid className="h-3 w-3" />
-                      <span>
-                        {isSendingToDashboard
-                          ? 'Generating...'
-                          : '🤖 Smart Send'
-                        }
-                      </span>
-                    </button>
-                  </>
-                )}
+                <button
+                  onClick={() => {
+                    const answeredCount = projectQuestions.filter(q => q.answered).length;
+                    if (answeredCount < 3) {
+                      alert('please answer atleast 3 questions');
+                      return;
+                    }
+                    handleSendToDashboard(true);
+                  }}
+                  className={`text-sm flex items-center gap-1 text-white px-2 py-1 rounded ${widgetsLocked || isSendingToDashboard || isTabContentLoading
+                    ? 'bg-indigo-400 cursor-default opacity-60'
+                    : 'bg-indigo-500 hover:bg-indigo-600'
+                    }`}
+                  disabled={isSendingToDashboard || isTabContentLoading}
+                  title={widgetsLocked ? 'please answer atleast 3 questions' : 'Generate structured dashboard widgets using AI (Recommended)'}
+                >
+                  <HiViewGrid className="h-3 w-3" />
+                  <span>
+                    {isSendingToDashboard
+                      ? 'Generating...'
+                      : '🤖 Smart Send'
+                    }
+                  </span>
+                </button>
 
                 {tabsSentToDashboard.has(`${currentPersona}-${currentTab}`) && (
                   <a

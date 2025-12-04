@@ -29,7 +29,7 @@ export default function LogoutButton() {
       disabled={loading}
       className="border rounded px-3 py-1 text-sm bg-white text-gray-800 hover:bg-gray-50 disabled:opacity-50"
     >
-      {loading ? 'Logging out…' : 'Logout'}
+      {loading ? 'Exiting...' : 'Exit'}
     </button>
   )
 }

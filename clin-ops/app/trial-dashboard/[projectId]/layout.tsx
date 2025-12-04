@@ -21,23 +21,27 @@ export default function DashboardLayout({
 
   useEffect(() => {
     let ignore = false
-    ;(async () => {
-      const res = await fetch('/api/auth/me', { credentials: 'include' })
-      if (res.ok) {
-        const u = await res.json()
-        if (!ignore) setUser(u)
-      } else {
-        if (!ignore) {
-          setUser(null)
-          router.push('/')
+      ; (async () => {
+        const res = await fetch('/api/auth/me', { credentials: 'include' })
+        if (res.ok) {
+          const u = await res.json()
+          if (!ignore) setUser(u)
+        } else {
+          // Allow guest access
+          if (!ignore) {
+            setUser({
+              id: 'default-user',
+              email: 'guest@example.com',
+              name: 'Guest User'
+            })
+          }
         }
-      }
-      if (!ignore) setLoading(false)
-    })()
+        if (!ignore) setLoading(false)
+      })()
     return () => {
       ignore = true
     }
-  }, [router])
+  }, [])
 
   if (loading) {
     return (
