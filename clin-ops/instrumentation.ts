@@ -2,10 +2,10 @@
 // Client-side instrumentation is handled in a separate file
 
 export async function register() {
-  // This is intentionally left empty for now
-  // Server-side OpenTelemetry initialization would go here
-  // if we decide to implement it in the future
-  return;
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const { initOtel } = await import('./lib/otel/node')
+    await initOtel()
+  }
 }
 
 // Client-side initialization is handled in a separate file
