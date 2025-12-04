@@ -331,7 +331,7 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
       if (projectId) {
         await saveChatData(
           projectId,
-          user?.id || 'default-user',
+          'default-user',
           messages as ChatMessageType[],
           projectInfo,
           currentPersona,
@@ -391,6 +391,8 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
 
   // Ref for auto-scrolling messages
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  // Ref for main chat input (so it can auto-focus when returning from dashboard)
+  const inputRef = useRef<HTMLInputElement>(null)
   const [feedbackRating, setFeedbackRating] = useState<'up' | 'down' | null>(null)
 
 
@@ -680,7 +682,7 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
     if (projectId && (Object.keys(projectInfo).length > 0 || messages.length > 1)) {
       autoSaveChatData(
         projectId,
-        user?.id || 'default-user',
+        'default-user',
         messages as ChatMessageType[],
         projectInfo,
         currentPersona,
@@ -691,10 +693,49 @@ export default function ContextAwareChat({ user }: { user?: AuthUser | null }) {
     }
   }, [messages, projectQuestions, currentPersona, currentTab, projectId, isDataLoaded, tabContent, tabContentGeneration]);
 
+
+  // Load existing dashboard state so "View Dashboard" stays available after navigation
+  useEffect(() => {
+    const loadDashboardState = async () => {
+      if (!projectId) return;
+
+      try {
+        const response = await fetch(`/api/dashboard/${projectId}`);
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.widgetsByTab) {
+          const tabsWithWidgets = Object.keys(result.data.widgetsByTab as Record<string, unknown>);
+
+          setTabsSentToDashboard(prev => {
+            const next = new Set(prev);
+
+            // Mark both personas for any tab that has dashboard widgets
+            tabsWithWidgets.forEach((tabType) => {
+              next.add(`trialCoordinator-${tabType}`);
+              next.add(`regulatoryAdvisor-${tabType}`);
+            });
+
+            return next;
+          });
+        }
+      } catch (error) {
+        console.error('Error loading dashboard state in chat:', error);
+      }
+    };
+
+    loadDashboardState();
+  }, [projectId]);
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+
+  // Auto-focus main chat input on initial mount (e.g. when coming back from dashboard)
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
 
 
@@ -1257,7 +1298,7 @@ Please provide the updated content that addresses the change request while maint
         const currentProjectInfo = getProjectInfo();
         saveChatData(
           projectId as string,
-          user?.id || 'default-user',
+          'default-user',
           messages as ChatMessageType[],
           currentProjectInfo,
           currentPersona,
@@ -1322,7 +1363,7 @@ Please provide the updated content that addresses the change request while maint
       const refreshProjectInfo = getProjectInfo();
       saveChatData(
         projectId as string,
-        user?.id || 'default-user',
+        'default-user',
         messages as ChatMessageType[],
         refreshProjectInfo,
         currentPersona,
@@ -1374,7 +1415,7 @@ Please provide the updated content that addresses the change request while maint
         },
         body: JSON.stringify({
           projectId: projectId || 'default-project',
-          userId: user?.id || 'default-user',
+          userId: 'default-user',
           tabType: currentTab,
           persona: currentPersona,
           content,
@@ -1426,7 +1467,7 @@ Please provide the updated content that addresses the change request while maint
         },
         body: JSON.stringify({
           projectId: projectId || 'default-project',
-          userId: user?.id || 'default-user',
+          userId: 'default-user',
           tabType: currentTab,
           persona: currentPersona,
           projectInfo
@@ -1621,10 +1662,11 @@ Please provide the updated content that addresses the change request while maint
                     }
                     handleSendToDashboard(true);
                   }}
-                  className={`text-sm flex items-center gap-1 text-white px-2 py-1 rounded ${widgetsLocked || isSendingToDashboard || isTabContentLoading
-                    ? 'bg-indigo-400 cursor-default opacity-60'
-                    : 'bg-indigo-500 hover:bg-indigo-600'
-                    }`}
+                  className={`text-sm flex items-center gap-1 text-white px-2 py-1 rounded ${
+                    widgetsLocked || isSendingToDashboard || isTabContentLoading
+                      ? 'bg-indigo-400 cursor-default opacity-60'
+                      : 'bg-indigo-500 hover:bg-indigo-600'
+                  }`}
                   disabled={isSendingToDashboard || isTabContentLoading}
                   title={widgetsLocked ? 'please answer atleast 3 questions' : 'Generate structured dashboard widgets using AI (Recommended)'}
                 >
@@ -2298,9 +2340,10 @@ Please provide the updated content that addresses the change request while maint
           </div>
 
           {/* Input - Fixed at bottom */}
-          {/* <div className="flex-none p-2 border-t dark:border-gray-700 bg-white dark:bg-gray-900">
+          <div className="flex-none p-2 border-t dark:border-gray-700 bg-white dark:bg-gray-900">
             <div className="flex gap-2">
               <input
+                ref={inputRef}
                 type="text"
                 className="flex-1 border dark:border-gray-600 rounded-l px-3 py-2 dark:bg-gray-800 dark:text-white text-base h-10"
                 value={input}
@@ -2319,7 +2362,7 @@ Please provide the updated content that addresses the change request while maint
                 </button>
               )}
             </div>
-          </div> */}
+          </div>
         </div>
 
         {/* Right Panel - Content Area */}

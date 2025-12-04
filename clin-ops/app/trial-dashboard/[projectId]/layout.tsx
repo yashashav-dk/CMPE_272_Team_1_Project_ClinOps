@@ -1,63 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import type { ReactNode } from 'react'
 import Sidebar from '@/app/components/Sidebar'
-
-type User = {
-  id: string
-  email: string
-  name?: string
-}
 
 export default function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: ReactNode
 }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
-
-  useEffect(() => {
-    let ignore = false
-      ; (async () => {
-        const res = await fetch('/api/auth/me', { credentials: 'include' })
-        if (res.ok) {
-          const u = await res.json()
-          if (!ignore) setUser(u)
-        } else {
-          // Allow guest access
-          if (!ignore) {
-            setUser({
-              id: 'default-user',
-              email: 'guest@example.com',
-              name: 'Guest User'
-            })
-          }
-        }
-        if (!ignore) setLoading(false)
-      })()
-    return () => {
-      ignore = true
-    }
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Loading...</div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return null
-  }
-
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar currentUser={user} />
+      <Sidebar />
       <div className="flex-1 overflow-auto">
         {children}
       </div>

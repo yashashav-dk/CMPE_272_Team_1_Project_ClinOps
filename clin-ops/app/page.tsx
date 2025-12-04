@@ -350,9 +350,20 @@ function HomeContent() {
         </div>
       </header>
 
+      {/* Project Creation Loading Overlay */}
+      {isCreating && (
+        <div className="fixed inset-0 bg-gray-900/90 backdrop-blur-sm z-50 flex items-center justify-center">
+          <LoadingSpinner
+            size="lg"
+            text="Creating your project..."
+            subtext="Setting up your clinical trial workspace"
+          />
+        </div>
+      )}
+
       {/* Project Checking Loading Overlay */}
       {checkingProjects && (
-        <div className="fixed inset-0 bg-gray-900/90 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-gray-900/90 backdrop-blur-sm z-40 flex items-center justify-center">
           <LoadingSpinner 
             size="lg" 
             text="Setting up your workspace..." 
