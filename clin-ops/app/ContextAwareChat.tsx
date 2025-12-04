@@ -1354,7 +1354,7 @@ Please provide the updated content that addresses the change request while maint
         },
         body: JSON.stringify({
           projectId: projectId || 'default-project',
-          userId: 'default-user',
+          userId: user?.id || 'default-user',
           tabType: currentTab,
           persona: currentPersona,
           content,
@@ -1400,7 +1400,7 @@ Please provide the updated content that addresses the change request while maint
         },
         body: JSON.stringify({
           projectId: projectId || 'default-project',
-          userId: 'default-user',
+          userId: user?.id || 'default-user',
           tabType: currentTab,
           persona: currentPersona,
           projectInfo
@@ -1571,24 +1571,20 @@ Please provide the updated content that addresses the change request while maint
                   <span>Refresh</span>
                 </button>
 
-                {user && (
-                  <>
-                    <button
-                      onClick={() => handleSendToDashboard(true)}
-                      className="text-sm flex items-center gap-1 bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-1 rounded"
-                      disabled={isSendingToDashboard || isTabContentLoading}
-                      title="Generate structured dashboard widgets using AI (Recommended)"
-                    >
-                      <HiViewGrid className="h-3 w-3" />
-                      <span>
-                        {isSendingToDashboard
-                          ? 'Generating...'
-                          : '🤖 Smart Send'
-                        }
-                      </span>
-                    </button>
-                  </>
-                )}
+                <button
+                  onClick={() => handleSendToDashboard(true)}
+                  className="text-sm flex items-center gap-1 bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-1 rounded"
+                  disabled={isSendingToDashboard || isTabContentLoading}
+                  title="Generate structured dashboard widgets using AI (Recommended)"
+                >
+                  <HiViewGrid className="h-3 w-3" />
+                  <span>
+                    {isSendingToDashboard
+                      ? 'Generating...'
+                      : '🤖 Smart Send'
+                    }
+                  </span>
+                </button>
 
                 {tabsSentToDashboard.has(`${currentPersona}-${currentTab}`) && (
                   <a

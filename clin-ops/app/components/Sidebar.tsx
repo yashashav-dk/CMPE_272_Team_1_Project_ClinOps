@@ -121,7 +121,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
 
       const result = await response.json()
       if (result.success) {
-        setProjects(projects.map(p => 
+        setProjects(projects.map(p =>
           p.id === projectId ? { ...p, name: editProjectName } : p
         ))
         setEditingProjectId(null)
@@ -132,7 +132,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
     }
   }
 
-  if (!currentUser) return null
+  // if (!currentUser) return null // Allow rendering for guests
 
   return (
     <>
@@ -165,7 +165,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
         {/* User email */}
         {!isCollapsed && (
           <div className="text-xs text-gray-400 px-4 pt-2 pb-3 border-b border-gray-700 truncate">
-            {currentUser.email}
+            {currentUser?.email || 'Guest User'}
           </div>
         )}
 
@@ -210,11 +210,10 @@ export default function Sidebar({ currentUser }: SidebarProps) {
               {projects.map((project) => (
                 <div
                   key={project.id}
-                  className={`group relative rounded-lg transition-colors ${
-                    currentProjectId === project.id
+                  className={`group relative rounded-lg transition-colors ${currentProjectId === project.id
                       ? 'bg-gray-800'
                       : 'hover:bg-gray-800'
-                  }`}
+                    }`}
                 >
                   {editingProjectId === project.id && !isCollapsed ? (
                     // Rename Input
@@ -308,7 +307,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
             <h2 className="text-xl font-bold text-white mb-4">Create New Project</h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">

@@ -21,19 +21,19 @@ export default function DashboardLayout({
 
   useEffect(() => {
     let ignore = false
-    ;(async () => {
-      const res = await fetch('/api/auth/me', { credentials: 'include' })
-      if (res.ok) {
-        const u = await res.json()
-        if (!ignore) setUser(u)
-      } else {
-        if (!ignore) {
-          setUser(null)
-          router.push('/')
+      ; (async () => {
+        const res = await fetch('/api/auth/me', { credentials: 'include' })
+        if (res.ok) {
+          const u = await res.json()
+          if (!ignore) setUser(u)
+        } else {
+          if (!ignore) {
+            setUser(null)
+            // router.push('/') // Removed redirect for guest users
+          }
         }
-      }
-      if (!ignore) setLoading(false)
-    })()
+        if (!ignore) setLoading(false)
+      })()
     return () => {
       ignore = true
     }
@@ -47,13 +47,13 @@ export default function DashboardLayout({
     )
   }
 
-  if (!user) {
-    return null
-  }
+  // if (!user) {
+  //   return null
+  // }
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar currentUser={user} />
+      <Sidebar currentUser={user || undefined} />
       <div className="flex-1 overflow-auto">
         {children}
       </div>
