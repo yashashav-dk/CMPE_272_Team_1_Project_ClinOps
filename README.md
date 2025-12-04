@@ -1,20 +1,33 @@
 # ClinOps - Agentic Clinical Trial Project Manager
 
+## Team Members
+
+| Name | SJSU ID |
+|------|---------|
+| Pranav Jitendra Trivedi | 019089512 |
+| Mohit Manoj Barade | 019130137 |
+| Yashashav Devalapalli Kamalraj | 017856371 |
+| Anupama Singh | 191042305 |
+
+## Project Overview
+
 **Problem Statement:** Clinical trials are run across fragmented tools (email, spreadsheets, portals) with no system that “understands” the protocol, visit schedule, or regulatory rules. Trial teams struggle to coordinate enrollment, document versions, safety reporting, and audit readiness. This leads to missed steps (outdated consent forms, missing signatures, untracked deviations), operational delays, and high compliance and inspection risk.
 
 **Solution:** ClinOps is an agentic clinical trial project manager: a shared workspace plus AI copilot that reads trial plans and regulatory guidance, turns them into milestones and checklists, and continuously watches for common risks. It provides trial-aware dashboards, smart alerts, document control guidance, and audit-ready structures—supporting coordinators, investigators, regulatory advisors, and data teams without replacing their medical or legal judgment.
 
 **Objective:** Demonstrate in a focused pilot that ClinOps (1) reliably converts a protocol into a workable project plan, (2) reduces time and stress to prepare an audit-ready binder, (3) proactively flags typical compliance risks (e.g., outdated ICFs, expiring documents, missing documentation, enrollment or timeline slippage), and (4) is actively used and valued by trial coordinators and managers.
 
-**Key Features (Concise):**
+## Key Features
 
-- Trial overview dashboards for enrollment, milestones, risks, and progress.
-- Persona-based AI copilots (Coordinator, Regulatory, Quality/Data) with context-aware chat grounded in trial documents.
-- Protocol-to-plan automation: milestones, visit schedules, checklists, and dependency mapping.
-- Document and version awareness for protocols, ICFs, SOPs, and certifications with expiry and update alerts.
-- Compliance and risk controls: deviation tracking hints, safety and reporting reminders, inspection readiness guidance.
-- Audit preparation workspace with binder structure, completeness checklists, and CAPA planning support.
-- End-to-end observability (OpenTelemetry, Prometheus, Grafana, Loki, Tempo) for system health and traceable audit trails.
+- **AI-Powered Chat**: Context-aware AI assistant for generating trial content.
+- **Dashboard**: Visual dashboard for tracking trial progress and widgets.
+- **Smart Send**: Automatically generate structured dashboard widgets from chat content.
+- **Project Management**: Create and manage multiple clinical trial projects.
+- **Guest Access**: Try the platform without creating an account.
+- **Protocol-to-Plan Automation**: Milestones, visit schedules, checklists, and dependency mapping.
+- **Document Control**: Version awareness for protocols, ICFs, SOPs, and certifications with expiry alerts.
+- **Compliance & Risk**: Deviation tracking hints, safety reporting reminders, inspection readiness guidance.
+- **Audit Preparation**: Workspace with binder structure, completeness checklists, and CAPA planning support.
 
 ## Personas & Tabs
 
@@ -29,33 +42,71 @@ Each persona sees the same chat but with prompts and tab content tailored to the
 - Widgets highlight **enrollment status, site and milestone progress, risks, compliance tasks, and audit readiness**.
 - Content in Coordinator/Regulatory tabs can be pushed into dashboards so teams see a **single, visual view** of operational and compliance health.
 
-## Tech Stack (High-Level)
+## Technologies Used
 
-- **Frontend / App:** Next.js 15 + React 19, TypeScript, TailwindCSS, React Icons, React Markdown, Recharts.
-- **Backend:** Next.js API routes on Node.js with TypeScript.
-- **Data & Auth:** PostgreSQL with Prisma ORM, bcryptjs for passwords, `jose` for JWT auth.
-- **AI:** Google Generative AI (Gemini) via `@google/generative-ai` for persona‑aware guidance and content.
-- **Tooling:** Jest + Testing Library, ESLint, Docker/Docker Compose, optional Kubernetes deployment.
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Database**: Prisma (SQLite for local dev, PostgreSQL for prod)
+- **AI Integration**: Google Generative AI (Gemini) / OpenAI (configurable)
+- **Testing**: Jest & React Testing Library
+- **Observability**: OpenTelemetry, Prometheus, Grafana, Loki, Tempo
 
-## Observability Tools
+## Testing & Performance
 
-- **OpenTelemetry SDKs** – capture traces and metrics from the app.
-- **Prometheus + prom-client** – scrape and store application metrics.
-- **Grafana** – dashboards for app and infrastructure health.
-- **Loki** – centralized log storage and search.
-- **Tempo** – distributed traces for request flows.
-- **Promtail** – ships logs from the host/application into Loki.
+### Test Coverage
+The project maintains a robust test suite with **167 passing tests** across 23 test suites, covering:
+-   **Unit Tests**: For individual components and utility functions.
+-   **Integration Tests**: Verifying API routes and service interactions.
+-   **UI Tests**: Ensuring correct rendering and user interactions for widgets and dashboards.
 
-## How to Run Locally (Dev)
+To run the tests:
+```bash
+npm test
+```
 
-1. **Install dependencies**
-   - `cd clin-ops`
-   - `npm install`
-2. **Configure environment**
-   - Create `clin-ops/.env` with `DATABASE_URL`, `GOOGLE_GENERATIVE_AI_API_KEY`, `JWT_SECRET`, and other variables from `DEPLOYMENT.md`.
-3. **Set up database (PostgreSQL)**
-   - Ensure PostgreSQL is running and `DATABASE_URL` points to it.
-   - `npx prisma db push` (or `npm run prisma:sync`).
-4. **Start the app**
-   - `npm run dev`
-   - Open `http://localhost:3000` in your browser.
+### Performance Optimizations
+-   **Server-Side Rendering (SSR)**: Leverages Next.js App Router for faster initial page loads and SEO.
+-   **Code Splitting**: Automatic route-based code splitting to reduce bundle size.
+-   **Memoization**: Strategic use of `useMemo` and `useCallback` in complex interactive components (e.g., `InteractiveChecklist`) to prevent unnecessary re-renders.
+-   **Observability**: Integrated `TelemetryProvider` for monitoring application performance and user interactions.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or later recommended)
+- npm (v9 or later)
+
+### Installation
+
+1.  Clone the repository:
+    ```bash
+    git clone <repository-url>
+    cd clin-ops
+    ```
+
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+
+3.  Set up environment variables. Copy `.env.example` to `.env.local` and fill in the values.
+    *(Note: For this submission, the app is configured to run with default settings if no `.env` is provided, using mock or local services where applicable.)*
+
+### Running the Application
+
+First, run the development server:
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+-   [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+-   [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
